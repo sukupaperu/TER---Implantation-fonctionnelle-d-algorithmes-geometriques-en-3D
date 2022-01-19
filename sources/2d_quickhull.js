@@ -2,7 +2,7 @@
 
 // ------------- Algorithme Quickhull -------------
 
-const quick_hull_2d_rec = (indices_list, left, right) =>
+const quick_hull_2d_rec = (indices_list, V, left, right) =>
 {
 	if(indices_list.length === 0)
 	{
@@ -39,24 +39,30 @@ const quick_hull_2d_rec = (indices_list, left, right) =>
 			quick_hull_2d_rec(
 				filter_list(new_indices_list, 
 					(c) => dist_from_segment(V(left), V(furthest), V(c)) >= 0
-				),
+				), V,
 				left, furthest
 			),
+			// On ajoute le point retiré précédemment
+			furthest,
 			// On calcule les points situés à gauche du segment furthest-right faisant partie de l'env. convexe
 			quick_hull_2d_rec(
 				filter_list(new_indices_list, 
 					(c) => dist_from_segment(V(furthest), V(right), V(c)) >= 0
-				),
+				), V,
 				furthest, right
-			),
-			// On ajoute le point retiré précédemment
-			furthest
+			)
 		);
 	}
 };
 
 const quick_hull_2d = (vertex_list) =>
 {
+	const V = (index) => {
+		if(vertex_list[index] === undefined)
+			console.error("Ne devrait pas arriver.");
+		return vertex_list[index];
+	};
+
     // À partir de la liste de sommets, on créé une liste d'indices leur faisant référence
 	const indices_list = new_ordered_int_list(vertex_list.length);
 
@@ -64,7 +70,7 @@ const quick_hull_2d = (vertex_list) =>
 	const left = reduce_list(indices_list,
 		bool_reducer((u,v) => V(u).x < V(v).x)
 	);
-
+	// On créé une nouvelle liste qui ne contient pas le point left
 	const indices_list_wo_left = filter_list(indices_list, (u) => u !== left);
 
 	// On récupère dans la liste le point situé le plus à droite
@@ -72,29 +78,28 @@ const quick_hull_2d = (vertex_list) =>
 		bool_reducer((u,v) => V(u).x > V(v).x)
 	);
 
-	// On créé une nouvelle liste qui ne contient pas ces deux points
+	// On créé une nouvelle liste qui ne contient pas le point right
 	const indices_list_wo_left_right = filter_list(indices_list_wo_left, (u) => u !== right);
     
 	return [].concat(
+		// On ajoute les point left (retiré précédemment)
+		left,
 		// On calcule les points situés à gauche du segment left-right faisant partie de l'env. convexe
 		quick_hull_2d_rec(
 			filter_list(indices_list_wo_left_right, 
 				(c) => dist_from_segment(V(left), V(right), V(c)) >= 0
-			),
-			left,
-			right
+			), V,
+			left, right
 		),
+		// On ajoute les point right (retiré précédemment)
+		right,
 		// On calcule les points situés à droite du segment left-right faisant partie de l'env. convexe
 		quick_hull_2d_rec(
 			filter_list(indices_list_wo_left_right, 
 				(c) => dist_from_segment(V(left), V(right), V(c)) < 0
-			),
-			right,
-			left
-		),
-		// On ajoute les points retirés précédemment
-		left,
-		right
+			), V,
+			right, left
+		)
 	);
 };
 // ------------- fin Algorithme Quickhull -------------
