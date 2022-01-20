@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta charset="utf-8">
 	<title>Demo TER</title>
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 	<style>
-		body
-		{
+		body {
 			background-color: black;
 			margin: 0;
 			display: flex;
@@ -14,43 +14,47 @@
 			align-items: center;
 			height: 100vh;
 		}
-		canvas
-		{
-			background-color: red;
-		}
 	</style>
 </head>
 
 <body>
-	<canvas width="300" height="300"></canvas>
+	<canvas width="600" height="600"></canvas>
 </body>
 <!-- <script src="simpl_obj_parser.js"></script> -->
 <script src="structures.js"></script>
 <script src="2d_trigo.js"></script>
 <script src="2d_quickhull.js"></script>
-<!-- <script src="wgl_display.js"></script> -->
+<script src="wgl.js"></script>
+<script src="display.js"></script>
 
 <script type="text/javascript">
 
-// ------------- Génération de points aléatoires -------------
-const vertex_list = [];
-for(let i = 0; i < 10; i++)
-	vertex_list.push(vertex_2d(
-		(Math.random() - .5)*2,
-		(Math.random() - .5)*2
-	));
+	// ------------- Génération de points aléatoires -------------
+	const vertex_list = [];
+	for (let i = 0; i < 20; i++)
+		vertex_list.push(vertex_3d(
+			(Math.random() - .5) * 2,
+			(Math.random() - .5) * 2,
+			(Math.random() - .5) * 2*0.
+		));
 
-let coord_naive = .9;
-vertex_list.push(vertex_2d(-coord_naive,coord_naive));
-vertex_list.push(vertex_2d(coord_naive,coord_naive));
-vertex_list.push(vertex_2d(coord_naive,-coord_naive));
-vertex_list.push(vertex_2d(-coord_naive,-coord_naive));
+	/*let coord_naive = 1.;
+	vertex_list.push(vertex_2d(-coord_naive, coord_naive));
+	vertex_list.push(vertex_2d(coord_naive, coord_naive));
+	vertex_list.push(vertex_2d(coord_naive, -coord_naive));
+	vertex_list.push(vertex_2d(-coord_naive, -coord_naive));*/
 
-// ------------- Exécution -------------
-let result = quick_hull_2d(vertex_list);
+	// ------------- Exécution -------------
+	let result = quick_hull_2d(vertex_list);
 
-console.log("result:", result);
-result.forEach( (x) => console.log(vertex_list[x]) );
+	// console.log("result:", result);
+	// result.forEach((x) => console.log(vertex_list[x]));
+
+	let disp = new display(document.getElementsByTagName("canvas")[0]);
+	disp.set_vertex_list(vertex_list);
+	disp.set_draw_ready();
+	disp.push_convex_hull_indices(result);
 
 </script>
+
 </html>
