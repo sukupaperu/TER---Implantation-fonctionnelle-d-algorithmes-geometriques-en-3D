@@ -19,13 +19,13 @@ class wgl
     {
         this.gl = c.getContext("webgl2", { preserveDrawingBuffer: true });
         if(!this.gl) alert("WebGL n'est pas compatible avec ce navigateur.");
-        this.gl.clearColor(0.1, 0.1, 0.1, 1.);
+        this.gl.clearColor(.05, .05, .05, 1.);
         this.gl.enable(this.gl.DEPTH_TEST);
-        // this.gl.enable(this.gl.CULL_FACE);
-        // this.gl.cullFace(this.gl.FRONT);
+        //this.gl.enable(this.gl.CULL_FACE);
+        //this.gl.cullFace(this.gl.FRONT);
     }
 
-    canvasSize()
+    canvas_size()
     {
         return this.gl.canvas.width;
     };

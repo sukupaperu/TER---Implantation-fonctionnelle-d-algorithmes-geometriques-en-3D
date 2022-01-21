@@ -6,19 +6,33 @@
 	<title>Demo TER</title>
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 	<style>
-		body {
+		body
+		{
 			background-color: black;
 			margin: 0;
 			display: flex;
+			flex-direction: column;
 			justify-content: center;
 			align-items: center;
 			height: 100vh;
+		}
+		main
+		{
+			width: 400px;
+		}
+		input#timeline
+		{
+			width: calc(100% - 10px);
+			margin: 5px;
 		}
 	</style>
 </head>
 
 <body>
-	<canvas width="600" height="600"></canvas>
+	<main>
+		<canvas width="400" height="400"></canvas>
+		<input type="range" id="timeline">
+	</main>
 </body>
 <!-- <script src="simpl_obj_parser.js"></script> -->
 <script src="structures.js"></script>
@@ -31,29 +45,53 @@
 
 	// ------------- Génération de points aléatoires -------------
 	const vertex_list = [];
-	for (let i = 0; i < 20; i++)
+	/*for (let i = 0; i < 100; i++)
 		vertex_list.push(vertex_3d(
-			(Math.random() - .5) * 2,
-			(Math.random() - .5) * 2,
-			(Math.random() - .5) * 2*0.
-		));
+			Math.random()*2.,
+			Math.random()*2.,
+			Math.random()*2.*0.
+		));*/
 
-	/*let coord_naive = 1.;
-	vertex_list.push(vertex_2d(-coord_naive, coord_naive));
-	vertex_list.push(vertex_2d(coord_naive, coord_naive));
-	vertex_list.push(vertex_2d(coord_naive, -coord_naive));
-	vertex_list.push(vertex_2d(-coord_naive, -coord_naive));*/
+	for (let i = 0; i < 350; i++)
+	{
+		let a = Math.random()*2*Math.PI;
+		let r = Math.sqrt(Math.random());
+		vertex_list.push(vertex_2d(
+			Math.cos(a)*r,
+			Math.sin(a)*r
+		));
+	}
+
+	/*for (let i = 0; i < 100; i++)
+		vertex_list.push(vertex_3d(
+			Math.floor(Math.random()*15.),
+			Math.floor(Math.random()*15.),
+			Math.floor(Math.random()*15.*0.)
+		));*/
+
+	/*for(let a = 0; a < Math.PI*2; a += Math.PI*2/50)
+	{
+		let r = 1.;
+		vertex_list.push(vertex_2d(
+			Math.cos(a)*r,
+			Math.sin(a)*r
+		));
+	}*/
 
 	// ------------- Exécution -------------
+	let disp = new display(
+		document.getElementsByTagName("canvas")[0],
+		document.getElementById("timeline")
+	);
+
+	disp.init_vertex_list(vertex_list);
+
 	let result = quick_hull_2d(vertex_list);
 
-	// console.log("result:", result);
-	// result.forEach((x) => console.log(vertex_list[x]));
-
-	let disp = new display(document.getElementsByTagName("canvas")[0]);
-	disp.set_vertex_list(vertex_list);
-	disp.set_draw_ready();
-	disp.push_convex_hull_indices(result);
+	disp.push_result_indices(result);
+	disp.set_ready();
+	disp.new_frame();
+	disp.autoplay();
 
 </script>
 

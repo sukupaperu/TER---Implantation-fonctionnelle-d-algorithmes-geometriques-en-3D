@@ -10,14 +10,14 @@ const minus = (u,v) =>
     vertex_3d(u.x - v.x, u.y - v.y, u.z - v.z);
 // ||v||
 const norm = v =>
-    Math.sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+    (v.x*v.x + v.y*v.y + v.z*v.z);
 
 /*
 	Calcule le rejet scalaire du vecteur u sur le vecteur v.
 	Formule tirée de : https://en.wikipedia.org/wiki/Vector_projection#Scalar_rejection
 */
 const vector_reject_2d = (u, v) =>
-    (u.y*v.x - u.x*v.y)/norm(v);
+    (u.y*v.x - u.x*v.y);
 
 /*
 	Considérant une droite passant par a et b, renvoie la distance minimale entre cette droite et la point c.
