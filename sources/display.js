@@ -177,6 +177,7 @@ class display
                 window.setTimeout(() => {
                     this.timeline_el.value = this.timeline_value = i;
                     this.new_frame();
+                    //this.wgl.capture_frame(1, frame" + "i);
                     autoplay_rec(i + 1);
                 }, 100);
             }
@@ -204,9 +205,10 @@ class display
 
             if(this.timeline_value - 1 < this.vao_list.length)
             {
-                for(let i = 0; i < this.vao_list.length; i++)
+                //for(let i = 0; i < this.vao_list.length; i++)
+                for(let i = Math.min(this.timeline_value, this.vao_list.length - 1); i >= 0; i--)
                 {
-                    if(i > this.timeline_value) break;
+                    //if(i > this.timeline_value) break;
                     const vao = this.vao_list[i];
                     vao.bind();
                     if(i === this.timeline_value)

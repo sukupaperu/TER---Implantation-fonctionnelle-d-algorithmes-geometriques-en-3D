@@ -96,4 +96,12 @@ class wgl
         };
     }
 
+    capture_frame(quality, title) {
+		let imgData = this.gl.canvas.toDataURL('image/png', quality);
+		let a = document.createElement("a");
+		a.setAttribute("href", imgData);
+		a.setAttribute("download", title + ".png");
+		a.click();
+	}
+
 }
