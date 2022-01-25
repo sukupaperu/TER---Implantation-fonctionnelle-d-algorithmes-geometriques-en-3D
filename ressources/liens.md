@@ -1,0 +1,3 @@
+- Démo de QuickHull en 3D : https://www.youtube.com/watch?v=Z58_Zsa6YTo
+- Description/explication de QuickHull en 3D : http://algolist.ru/maths/geom/convhull/qhull3d.php
+- CGoGN : https://cgogn.github.io/
