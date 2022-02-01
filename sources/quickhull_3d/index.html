@@ -46,7 +46,7 @@
 	// ------------- Génération de points aléatoires -------------
 	const V_LIST = [];
 
-	for (let i = 0; i < 40; i++)
+	for (let i = 0; i < 400; i++)
 	{
 		V_LIST.push(
 			multiply3_1(
@@ -74,11 +74,23 @@
 	disp.init_vertex_list(V_LIST);
 	set_display_struct(disp);
 
-	let initial = get_initial_simplex(V_LIST, disp);
+	let convex_hull = get_initial_simplex(V_LIST, disp);
+
+	let result = [];
+	he_for_each_faces(
+		convex_hull,
+		he_i =>
+			he_for_each_vertices(
+				convex_hull,
+				he_i,
+				(x,y,z) => result.push(x,y,z)
+			)
+		)
+	;
 
 	//let result = quick_hull_2d(vertex_list);
 
-	//disp.push_result_indices(result);
+	disp.push_result_indices(result);
 	disp.set_ready();
 	disp.new_frame();
 	//disp.autoplay();

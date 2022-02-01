@@ -301,7 +301,7 @@ class display
                 gl.uniform1f(this.u_point_size, 5);
                 gl.drawElements(gl.POINTS, this.vao_convex_hull.nb_tri, gl.UNSIGNED_INT, 0);
                 gl.uniform3f(this.u_color, 0, 1, 0);
-                gl.drawElements(gl.LINE_LOOP, this.vao_convex_hull.nb_tri, gl.UNSIGNED_INT, 0);
+                gl.drawElements(gl.TRIANGLES, this.vao_convex_hull.nb_tri, gl.UNSIGNED_INT, 0);
             }
 
             gl.uniform3f(this.u_color, 1, 1, 1);
