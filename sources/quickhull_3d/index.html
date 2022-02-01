@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Demo TER</title>
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+	<style>
+		body
+		{
+			background-color: black;
+			margin: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+		}
+		main
+		{
+			width: 500px;
+		}
+		input#timeline
+		{
+			width: calc(100% - 10px);
+			margin: 5px;
+		}
+	</style>
+</head>
+
+<body>
+	<main>
+		<canvas width="500" height="500"></canvas>
+		<input type="range" id="timeline">
+	</main>
+</body>
+<!-- <script src="simpl_obj_parser.js"></script> -->
+<script src="structures.js"></script>
+<script src="3d_trigo.js"></script>
+<script src="3d_quickhull.js"></script>
+<script src="wgl.js"></script>
+<script src="display.js"></script>
+
+<script type="text/javascript">
+
+	// ------------- Génération de points aléatoires -------------
+	const V_LIST = [];
+
+	for (let i = 0; i < 40; i++)
+	{
+		V_LIST.push(
+			multiply3_1(
+				normalize3(
+					minus3_1(
+						vec3(
+							Math.random(),
+							Math.random(),
+							Math.random()
+						),
+						.5
+					)
+				),
+				Math.cbrt(Math.random())//*0 + 1
+			)
+		);
+	}
+
+	// ------------- Exécution -------------
+	let disp = new display(
+		document.getElementsByTagName("canvas")[0],
+		document.getElementById("timeline")
+	);
+
+	disp.init_vertex_list(V_LIST);
+	set_display_struct(disp);
+
+	let initial = get_initial_simplex(V_LIST, disp);
+
+	//let result = quick_hull_2d(vertex_list);
+
+	//disp.push_result_indices(result);
+	disp.set_ready();
+	disp.new_frame();
+	//disp.autoplay();
+
+</script>
+
+</html>

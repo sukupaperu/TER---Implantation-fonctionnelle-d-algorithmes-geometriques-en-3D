@@ -105,7 +105,7 @@ class display
             this.timeline_value = parseInt(this.timeline_el.value);
             this.new_frame();
         });
-        this.gl.canvas.addEventListener("mousedown", () => {
+        /*this.gl.canvas.addEventListener("mousedown", () => {
             console.log("mouse down");
         });
         this.gl.canvas.addEventListener("mouseup", () => {
@@ -113,19 +113,19 @@ class display
         });
         this.gl.canvas.addEventListener("mousemove", () => {
             console.log("mouse move");
-        });
+        });*/
     }
 
     init_vertex_list(list)
     {
-        let max_x = vertex_list.reduce((p,q) => p.x > q.x ? p : q).x;
-        let min_x = vertex_list.reduce((p,q) => p.x < q.x ? p : q).x;
+        let max_x = list.reduce((p,q) => p.x > q.x ? p : q).x;
+        let min_x = list.reduce((p,q) => p.x < q.x ? p : q).x;
         let diff_x = max_x - min_x;
-        let max_y = vertex_list.reduce((p,q) => p.y > q.y ? p : q).y;
-        let min_y = vertex_list.reduce((p,q) => p.y < q.y ? p : q).y;
+        let max_y = list.reduce((p,q) => p.y > q.y ? p : q).y;
+        let min_y = list.reduce((p,q) => p.y < q.y ? p : q).y;
         let diff_y = max_y - min_y;
-        let max_z = vertex_list.reduce((p,q) => p.z > q.z ? p : q).z;
-        let min_z = vertex_list.reduce((p,q) => p.z < q.z ? p : q).z;
+        let max_z = list.reduce((p,q) => p.z > q.z ? p : q).z;
+        let min_z = list.reduce((p,q) => p.z < q.z ? p : q).z;
         let diff_z = max_z - min_z;
 
         let min_coord = Math.max(Math.max(min_x, min_y), min_z);
