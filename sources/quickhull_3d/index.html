@@ -34,21 +34,15 @@
 		<input type="range" id="timeline">
 	</main>
 </body>
-<!-- <script src="simpl_obj_parser.js"></script> -->
-<script src="structures.js"></script>
+
+<script src="vertex_list.js"></script>
 <script src="3d_trigo.js"></script>
-<script src="3d_quickhull.js"></script>
-<script src="wgl.js"></script>
-<script src="display.js"></script>
-
 <script type="text/javascript">
-
+	"use strict";
 	// ------------- Génération de points aléatoires -------------
-	const V_LIST = [];
-
-	for (let i = 0; i < 400; i++)
+	for (let i = 0; i < 1000; i++)
 	{
-		V_LIST.push(
+		GLOBAL_V_LIST.push(
 			multiply3_1(
 				normalize3(
 					minus3_1(
@@ -64,17 +58,29 @@
 			)
 		);
 	}
+</script>
+<script src="wgl.js"></script>
+<script src="display.js"></script>
+<script src="structures.js"></script>
+<script src="3d_quickhull.js"></script>
+<script type="text/javascript">
+	"use strict";
 
-	// ------------- Exécution -------------
-	let disp = new display(
+	let GLOBAL_DISP = new display(
 		document.getElementsByTagName("canvas")[0],
 		document.getElementById("timeline")
 	);
+	GLOBAL_DISP.init_vertex_list(GLOBAL_V_LIST);
 
-	disp.init_vertex_list(V_LIST);
-	set_display_struct(disp);
+	// ------------- Exécution -------------
+	let convex_hull = quick_hull_3d(GLOBAL_V_LIST);
 
-	let convex_hull = get_initial_simplex(V_LIST, disp);
+	// console.table(convex_hull);
+	// convex_hull = remove_face(convex_hull, convex_hull[0]);
+	// convex_hull = remove_face(convex_hull, convex_hull[3]);
+	// convex_hull = remove_face(convex_hull, convex_hull[6]);
+	// convex_hull = remove_face(convex_hull, convex_hull[9]);
+	// console.table(convex_hull);
 
 	let result = [];
 	he_for_each_faces(
@@ -88,12 +94,10 @@
 		)
 	;
 
-	//let result = quick_hull_2d(vertex_list);
-
-	disp.push_result_indices(result);
-	disp.set_ready();
-	disp.new_frame();
-	//disp.autoplay();
+	GLOBAL_DISP.push_result_indices(result);
+	GLOBAL_DISP.set_ready();
+	GLOBAL_DISP.new_frame();
+	GLOBAL_DISP.autoplay();
 
 </script>
 

@@ -22,18 +22,15 @@ const dist_from_3d_segment_vertices = (p,a,b) =>
     {
         const pa = minus3(p, a);
         const ba = minus3(b, a);
-        // const ba_dot_ba = dot3(ba, ba);
-        // console.log(ba_dot_ba)
-        // if(ba_dot_ba === 0) return 0;
         const h = clamp(dot3(pa, ba)/dot3(ba, ba), 0, 1);
         const pa_bah = minus3(pa, multiply3_1(ba, h));
         return dot3(pa_bah, pa_bah);
     }
 ;
-const dist_from_3d_segment = (V,p,edge) => dist_from_3d_segment_vertices(V(p), V(edge[0]), V(edge[1]));
+const dist_from_3d_segment = (p,edge) => dist_from_3d_segment_vertices(V(p), V(edge[0]), V(edge[1]));
 
 const signed_dist_from_3d_plane_vertices = (p,a,b,c) => dot3(minus3(p, a), cross(minus3(b, a), minus3(c, a)));
 const dist_from_3d_plane_vertices = (p,a,b,c) => abs(signed_dist_from_3d_plane_vertices(p,a,b,c));
 
-const dist_from_3d_plane = (V,p,tri) => dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2]));
-const is_above_3d_plane = (V,p,tri) => signed_dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2])) >= 0;
+const dist_from_3d_plane = (p,tri) => dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2]));
+const is_above_3d_plane = (p,tri) => signed_dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2])) >= 0;
