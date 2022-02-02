@@ -48,7 +48,7 @@ void main()
 
     mat4 rot1 = rotateXZ(-u_mouse.x/u_resolution.x*6.28);
     mat4 rot2 = rotateYZ(-u_mouse.y/u_resolution.y*6.28*.1);
-    mat4 rot = rot2*rot1;
+    mat4 rot = rot1*rot2;
 
     mat4 V = translate(vec3(0., 0., -1.75))*rot;
     mat4 P = project(.01, 10., 1./.5, 1.);
@@ -226,6 +226,22 @@ class display
         this.vao_list.push(this.wgl.new_vao(list, this.vbo_vertices));
     }
 
+    push_he_l(he_l)
+    {
+        let list = [];
+        he_for_each_faces(
+            he_l,
+            he_i =>
+                he_for_each_vertices(
+                    he_l,
+                    he_i,
+                    (x,y,z) => list.push(x,y,z)
+                )
+            )
+        ;
+        this.vao_list.push(this.wgl.new_vao(list, this.vbo_vertices));
+    }
+
     set_ready()
     {
         this.timeline_el.max = this.vao_list.length + 1;
@@ -277,10 +293,9 @@ class display
 
             if(this.timeline_value - 1 < this.vao_list.length)
             {
-                //for(let i = 0; i < this.vao_list.length; i++)
-                for(let i = Math.min(this.timeline_value, this.vao_list.length - 1); i >= 0; i--)
+                const rend_step = (i) =>
                 {
-                    //if(i > this.timeline_value) break;
+                    if(i < 0) return;
                     const vao = this.vao_list[i];
                     vao.bind();
                     if(i === this.timeline_value)
@@ -292,7 +307,9 @@ class display
                     }
                     else gl.uniform3f(this.u_color, 1, 0, 0);
                     gl.drawElements(gl.TRIANGLES, vao.nb_tri, gl.UNSIGNED_INT, 0);
-                }
+                };
+                // rend_step(Math.min(this.timeline_value + 1, this.vao_list.length - 1));
+                rend_step(Math.min(this.timeline_value, this.vao_list.length - 1));
             }
             else
             {

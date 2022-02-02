@@ -1,9 +1,9 @@
 "use strict";
 
-const get_min_max = (v_index_list) =>
+const get_min_max = (v_l) =>
 {
 	const min_max_list =
-		v_index_list.reduce(
+		v_l.reduce(
 			(res, v) =>
 				[
 					[
@@ -82,7 +82,7 @@ const explore_and_remove_visible_faces_from_p = (he_l, he, p) =>
 		if(he_index == -1)
 		    return he_l;
 
-		const he = he_list[he_index];
+		const he = he_l[he_index];
 
 		if(!he_is_above_3d_plane(p, he_l, he))
 			return he_l;
@@ -115,31 +115,59 @@ const explore_and_remove_visible_faces_from_p = (he_l, he, p) =>
 	return right_he_l;
 }
 
-//const quick_hull_3d_2 = (v_index_list)
-
-const quick_hull_3d = (v_l) =>
+const quick_hull_3d_2 = (he_l_hull, curr_face_index, v_l) =>
 {
-	const v_index_l = new_ordered_int_list(v_l.length);
+	const he_curr_face = he_by_face_index(he_l_hull, curr_face_index);
+
+	const v_furthest = v_l.reduce(
+		bool_reducer(
+			(v_a, v_b) =>
+				he_signed_dist_from_3d_plane(v_a, he_l_hull, he_curr_face)
+				> he_signed_dist_from_3d_plane(v_b, he_l_hull, he_curr_face)
+		)
+	);
+
+	if(!he_is_above_3d_plane(v_furthest, he_l_hull, he_curr_face))
+		return he_l_hull;
+
+	const he_l_temp_hull = explore_and_remove_visible_faces_from_p(he_l_hull, he_curr_face, v_furthest);
+
+	const he_border_index_l = he_l_temp_hull.filter(
+		(he) => he_is_boundary(he)
+	);
+
+	const he_l_final_hull = he_border_index_l.reduce(
+		(he_l_hull, he) =>
+			concat_face(
+				he_l_hull, 
+				[
+					he_to_vert(he_l_hull, he),
+					he_from_vert(he),
+					v_furthest
+				]
+			)
+		,
+		he_l_temp_hull
+	);
+}
+
+const quick_hull_3d = (v_vec3_l) =>
+{
+	const v_l = new_ordered_int_list(v_vec3_l.length);
 	
-	const [initial_simplex, initial_simplex_v_index_l] = get_initial_simplex(v_index_l);
+	const [he_l_initial_simplex, v_l_initial_simplex] = get_initial_simplex(v_l);
 
-	const v_index_l_wo_initial_simplex = v_index_l.filter(
-		(v_index) => !is_in_list(initial_simplex_v_index_l, v_index)
+	const v_l_filtered = v_l.filter(
+		(v_index) =>
+			!is_defined(v_l_initial_simplex.find(
+				(v_index_in) => v_index_in === v_index
+			))
+			&& is_defined(he_l_initial_simplex.find(
+				(he_face) => he_is_above_3d_plane(v_index, he_l_initial_simplex, he_face)
+			))
 	);
 
-	const face_A = he_by_face_index(initial_simplex, 0);
-	const face_B = he_by_face_index(initial_simplex, 1);
-	const face_C = he_by_face_index(initial_simplex, 2);
-	const face_D = he_by_face_index(initial_simplex, 3);
+	quick_hull_3d_2(he_l_initial_simplex, 0, v_l_filtered);
 
-	const v_index_l_outside_initial_simplex = v_index_l_wo_initial_simplex.filter(
-		(v_index) => 
-			he_is_above_3d_plane(v_index, initial_simplex, face_A)
-			|| he_is_above_3d_plane(v_index, initial_simplex, face_B)
-			|| he_is_above_3d_plane(v_index, initial_simplex, face_C)
-			|| he_is_above_3d_plane(v_index, initial_simplex, face_D)
-	);
-	console.log(v_index_l_wo_initial_simplex.length - v_index_l_outside_initial_simplex.length);
-
-	return initial_simplex;
+	return he_l_initial_simplex;
 }

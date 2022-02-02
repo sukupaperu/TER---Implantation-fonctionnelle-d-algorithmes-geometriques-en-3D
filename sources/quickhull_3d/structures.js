@@ -27,6 +27,7 @@ const he_from_vert = (he) => he.vert;
 const he_to_vert = (he_l, he) => he_from_vert(he_next(he_l, he));
 
 const he_by_face_index = (he_l, face_index) => he_l[face_index*3];
+const he_2_he_index_list = (he_l, he) => [he_from_vert(he), he_to_vert(he_l, he), he_to_vert(he_l, he_next(he_l, he))];
 
 // half-edge -> integer
 const he_index = (he) => he.index;
@@ -60,7 +61,8 @@ const look_up_for_opposite_he_index = (he_l, from_vert, to_vert) =>
 
 const concat_face_vertices = (he_l, vert_A, vert_B, vert_C) =>
 {
-	GLOBAL_DISP.push_indices([vert_A, vert_B, vert_C]);
+	//GLOBAL_DISP.push_indices([vert_A, vert_B, vert_C]);
+	GLOBAL_DISP.push_he_l(he_l);
 
 	const he_AB_index = he_l.length;
 	const he_BC_index = he_l.length + 1;
@@ -70,7 +72,7 @@ const concat_face_vertices = (he_l, vert_A, vert_B, vert_C) =>
 	const he_BC_opposite_index = look_up_for_opposite_he_index(he_l, vert_B, vert_C);
 	const he_CA_opposite_index = look_up_for_opposite_he_index(he_l, vert_C, vert_A);
 
-	return he_l
+	const he_l_result = he_l
 		.map((he_curr) => {
 			if(!he_is_null(he_curr))
 				switch(he_index(he_curr))
@@ -85,12 +87,18 @@ const concat_face_vertices = (he_l, vert_A, vert_B, vert_C) =>
 		.concat(new_he(he_BC_index, he_CA_index, he_BC_opposite_index, vert_B))
 		.concat(new_he(he_CA_index, he_AB_index, he_CA_opposite_index, vert_C))
 	;
+
+	GLOBAL_DISP.push_he_l(he_l_result);
+
+	return he_l_result;
 };
 const concat_face = (he_l, tri) => concat_face_vertices(he_l, tri[0], tri[1], tri[2]);
 
 const remove_face = (he_l, he) => {
 	if(he_is_null(he))
 		console.error("Ne devrait pas arriver : suppression d'une face déjà supprimée.");
+
+	//GLOBAL_DISP.push_he_l(he_l);
 
 	const he_A = he;
 	const he_B = he_next(he_l, he);
@@ -104,7 +112,7 @@ const remove_face = (he_l, he) => {
     const he_B_opposite_index = he_opposite_index(he_B);
     const he_C_opposite_index = he_opposite_index(he_C);
 
-	return he_l
+	const he_l_result = he_l
 		.map((he_curr) => {
 			if(!he_is_null(he_curr))
 				switch(he_index(he_curr))
@@ -121,6 +129,10 @@ const remove_face = (he_l, he) => {
 			return he_curr;
 		})
 	;
+
+	GLOBAL_DISP.push_he_l(he_l_result);
+
+	return he_l_result;
 };
 
 // ------------- Fonctions sur les listes -------------
@@ -160,3 +172,5 @@ const replace_value_in_list = (list,index,new_value) =>
 */
 const bool_reducer = bool_cond => 
     (u,v) => bool_cond(u, v) ? u : v;
+
+const is_defined = (a) => a !== undefined;
