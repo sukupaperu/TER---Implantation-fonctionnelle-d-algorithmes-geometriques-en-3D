@@ -4,7 +4,6 @@
 
 // ------------- Structures de données simples -------------
 
-
 const new_he = (i,n,o,v) => ({
 	index: i,
 	next: n,
@@ -26,6 +25,8 @@ const he_prev = (he_l, he) => he_next(he_l, he_next(he_l, he));
 // half-edge-list -> half-edge -> integer
 const he_from_vert = (he) => he.vert;
 const he_to_vert = (he_l, he) => he_from_vert(he_next(he_l, he));
+
+const he_by_face_index = (he_l, face_index) => he_l[face_index*3];
 
 // half-edge -> integer
 const he_index = (he) => he.index;
@@ -141,6 +142,14 @@ const look_up_in_list = (list,condition) =>
 		: condition(list[list.length - 1])
 			? list.length - 1
 			: look_up_in_list(list.slice(0,-1), condition)
+;
+
+const is_in_list = (list,value) =>
+	list.length === 0
+		? false
+		: list[list.length - 1] === value
+			? true
+			: is_in_list(list.slice(0,-1), value)
 ;
 
 const replace_value_in_list = (list,index,new_value) =>

@@ -80,7 +80,7 @@ void main()
 
     vec3 color = gl_FrontFacing
         ? u_color - .85*shading
-        : vec3(1.) - .85*shading;
+        : vec3(.5) - .25*shading;
 
     fragColor = vec4(color, 1.);
     

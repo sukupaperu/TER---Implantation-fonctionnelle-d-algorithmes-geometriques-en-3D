@@ -34,3 +34,4 @@ const dist_from_3d_plane_vertices = (p,a,b,c) => abs(signed_dist_from_3d_plane_v
 
 const dist_from_3d_plane = (p,tri) => dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2]));
 const is_above_3d_plane = (p,tri) => signed_dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2])) >= 0;
+const he_is_above_3d_plane = (p,he_l,he) => signed_dist_from_3d_plane_vertices(V(p), V(he_from_vert(he)), V(he_to_vert(he_l, he)), V(he_to_vert(he_l, he_next(he_l, he)))) >= 0;
