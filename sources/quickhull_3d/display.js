@@ -58,7 +58,7 @@ void main()
     v_coords = vec3(rot*p);
     t_coords = pos_out.xyz;
 
-    gl_PointSize = u_point_size*2.;
+    gl_PointSize = u_point_size*1.5;
     gl_Position = pos_out;
 }`;
 

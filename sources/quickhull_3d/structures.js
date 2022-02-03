@@ -26,8 +26,31 @@ const he_prev = (he_l, he) => he_next(he_l, he_next(he_l, he));
 const he_from_vert = (he) => he.vert;
 const he_to_vert = (he_l, he) => he_from_vert(he_next(he_l, he));
 
+const he_nb_faces = (he_l) => he_l.length/3;
+
 const he_by_face_index = (he_l, face_index) => he_l[face_index*3];
-const he_2_he_index_list = (he_l, he) => [he_from_vert(he), he_to_vert(he_l, he), he_to_vert(he_l, he_next(he_l, he))];
+const he_face_2_he_index_list = (he_l, he) => [
+	he_from_vert(he),
+	he_to_vert(he_l, he),
+	he_to_vert(he_l, he_next(he_l, he))
+];
+const he_2_face_index = (he) => Math.floor(he_index(he)/3);
+const he_last_face_added = (he_l) => he_l[he_l.length - 1];
+
+const he_find_in_face = (he_l, condition_on_he) =>
+	he_l.length === 0
+		? undefined
+		: condition_on_he(he_l[he_l.length - 3], he_l.length - 3)
+			? he_l[he_l.length - 3]
+			: he_find_in_face(he_l.slice(0, he_l.length - 3), condition_on_he)
+;
+
+const he_concat_face = (he_l_dest, he_l_source, he_source) =>
+	he_l_dest
+		.concat(he_source)
+		.concat(he_next(he_l_source, he_source))
+		.concat(he_prev(he_l_source, he_source))
+;
 
 // half-edge -> integer
 const he_index = (he) => he.index;
@@ -156,16 +179,16 @@ const look_up_in_list = (list,condition) =>
 			: look_up_in_list(list.slice(0,-1), condition)
 ;
 
-const is_in_list = (list,value) =>
-	list.length === 0
-		? false
-		: list[list.length - 1] === value
-			? true
-			: is_in_list(list.slice(0,-1), value)
-;
+// const is_in_list = (list,value) =>
+// 	list.length === 0
+// 		? false
+// 		: list[list.length - 1] === value
+// 			? true
+// 			: is_in_list(list.slice(0,-1), value)
+// ;
 
-const replace_value_in_list = (list,index,new_value) =>
-	list.slice(0, index).concat(new_value).concat(list.slice(index + 1));
+const replace_value_in_list = (list,i,new_value) =>
+	list.slice(0, i).concat(new_value).concat(list.slice(i + 1));
 
 /*
 	(vertex -> vertex -> bool) -> vertex
@@ -174,3 +197,4 @@ const bool_reducer = bool_cond =>
     (u,v) => bool_cond(u, v) ? u : v;
 
 const is_defined = (a) => a !== undefined;
+const list_is_empty = (l) => l.length === 0;

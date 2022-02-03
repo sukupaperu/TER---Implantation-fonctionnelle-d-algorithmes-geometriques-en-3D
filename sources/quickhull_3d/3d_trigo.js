@@ -37,7 +37,12 @@ const signed_dist_from_3d_plane = (p,tri) => signed_dist_from_3d_plane_vertices(
 const is_above_3d_plane = (p,tri) => signed_dist_from_3d_plane_vertices(V(p), V(tri[0]), V(tri[1]), V(tri[2])) >= 0;
 
 const he_signed_dist_from_3d_plane = (p,he_l,he) =>
-    signed_dist_from_3d_plane(p, he_2_he_index_list(he_l,he));
+    signed_dist_from_3d_plane(p, he_face_2_he_index_list(he_l,he));
 const he_is_above_3d_plane = (p,he_l,he) => 
-    is_above_3d_plane(p, he_2_he_index_list(he_l,he));
-    //signed_dist_from_3d_plane_vertices(V(p), V(he_from_vert(he)), V(he_to_vert(he_l, he)), V(he_to_vert(he_l, he_next(he_l, he)))) >= 0;
+    is_above_3d_plane(p, he_face_2_he_index_list(he_l,he));
+const he_is_above_3d_plane_for_deleted = (p,he_l,he_index) => 
+    is_above_3d_plane(p, [
+        he_from_vert(he_l[he_index]),
+        he_from_vert(he_l[he_index + 1]),
+        he_from_vert(he_l[he_index + 2])
+    ]);
