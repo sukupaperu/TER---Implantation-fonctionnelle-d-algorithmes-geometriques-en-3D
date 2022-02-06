@@ -259,7 +259,7 @@ class display
                     this.new_frame();
                     //this.wgl.capture_frame(1, frame" + "i);
                     autoplay_rec(i + 1);
-                }, 100);
+                }, 1);
             }
             else
             {
@@ -303,7 +303,7 @@ class display
                         gl.uniform3f(this.u_color, 1, 1, 1);
                         gl.uniform1f(this.u_point_size, 6);
                         gl.drawElements(gl.TRIANGLE, vao.nb_tri, gl.UNSIGNED_INT, 0);
-                        gl.uniform3f(this.u_color, 1, 1, 0);
+                        gl.uniform3f(this.u_color, 1, .5, 0);
                     }
                     else gl.uniform3f(this.u_color, 1, 0, 0);
                     gl.drawElements(gl.TRIANGLES, vao.nb_tri, gl.UNSIGNED_INT, 0);

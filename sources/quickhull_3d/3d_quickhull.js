@@ -93,48 +93,135 @@ const get_initial_simplex = (v_l) =>
 
 const explore_and_remove_visible_faces_from_p = (he_l, he, p) =>
 {
-	const explore_and_remove_2 = ([he_l, he_l_deleted], he_index, p) =>
+	const explore_and_remove_2 = ([he_l, he_l_deleted], he_opposite, p) =>
 	{
-		if(he_index == -1)
+		if(he_opposite == -1)
 		    return [he_l, he_l_deleted];
 
-		const he = he_l[he_index];
+		const he = he_l[he_opposite];
+
+		if(he_is_null(he))
+			return [he_l, he_l_deleted];
 
 		if(!he_is_above_3d_plane(p, he_l, he))
 			return [he_l, he_l_deleted];
 
-		const he_left = he_prev(he_l, he);
-		const he_right = he_next(he_l, he);
+		const he_left_opposite_index = he_opposite_index(he_prev(he_l, he));
+		const he_right_opposite_index = he_opposite_index(he_next(he_l, he));
 
-		const he_left_opposite_index = he_opposite_index(he_left);
-		const he_right_opposite_index = he_opposite_index(he_right);
-
-		// const he_l_deleted_updated = he_concat_face(he_l_deleted, he_l, he);
-		const he_l_deleted_updated = he_l_deleted.concat(he);
-		//he_concat_face(he_l_deleted, he_l, he);
-		const new_he_l = remove_face(he_l, he);
+			const new_he_l = remove_face(he_l, he);
+			const he_l_deleted_updated = he_l_deleted.concat(he);
 		const left_res = explore_and_remove_2([new_he_l, he_l_deleted_updated], he_left_opposite_index, p);
+
 		const right_res = explore_and_remove_2(left_res, he_right_opposite_index, p);
 
 		return right_res;
 	}
 
-	const he_left = he_prev(he_l, he);
-    const he_right = he_next(he_l, he);
+	const he_left_opposite_index = he_opposite_index(he_prev(he_l, he));
+	const he_right_opposite_index = he_opposite_index(he_next(he_l, he));
 
-	const he_left_opposite_index = he_opposite_index(he_left);
-	const he_curr_opposite_index = he_opposite_index(he);
-	const he_right_opposite_index = he_opposite_index(he_right);
-
-	// const he_l_deleted = he_concat_face([], he_l, he);
-	const he_l_deleted = [].concat(he);
 	const new_he_l = remove_face(he_l, he);
-	const left_res = explore_and_remove_2([new_he_l, he_l_deleted], he_left_opposite_index, p);
-	const middle_res = explore_and_remove_2(left_res, he_curr_opposite_index, p);
-	const right_res = explore_and_remove_2(middle_res, he_right_opposite_index, p);
+	const he_l_deleted = [].concat(he);
+
+	const middle_res = explore_and_remove_2([new_he_l, he_l_deleted], he_opposite_index(he), p);
+
+	const left_res = explore_and_remove_2(middle_res, he_left_opposite_index, p);
+
+	const right_res = explore_and_remove_2(left_res, he_right_opposite_index, p);
 
 	return right_res;
 }
+
+const get_outside_point_of_face_based_on_condition = (v_l_set_per_face, face_index, condition) =>
+{
+	return v_l_set_per_face.reduce(
+		([v_l_set_per_face_updated, set_detected], curr_outside_set, curr_face_index) =>
+			{
+				if(curr_face_index !== face_index)
+					return [v_l_set_per_face_updated.concat([curr_outside_set]), set_detected]
+				const result = curr_outside_set.reduce(
+					([curr_outside_set_updated, set_detected], vertex) =>
+					{
+						return condition(vertex)
+						? [curr_outside_set_updated.concat(vertex), set_detected]
+						: [curr_outside_set_updated, set_detected.concat(vertex)]
+					}
+						
+					,
+					[[],[]]
+				);
+				return [
+					v_l_set_per_face_updated.concat([result[0]]),
+					set_detected.concat(result[1])
+				];
+			}
+		,
+		[[],[]]
+	);
+}
+
+const get_outside_points_of_current_face = (he_l_faces_deleted, v_l_set_per_face, condition) =>
+{
+	return he_l_faces_deleted.reduce(
+		([v_l_set_per_face_updated, set_detected], curr_he_face_deleted) => 
+		{
+			//console.log(curr_he_face_deleted, he_2_face_index(curr_he_face_deleted))
+			const result = get_outside_point_of_face_based_on_condition(v_l_set_per_face_updated, he_2_face_index(curr_he_face_deleted), condition);
+			return [result[0], set_detected.concat(result[1])];
+		}
+		,
+		[v_l_set_per_face, []]
+	);
+}
+
+const reconstruct = (he_l, he_l_faces_added, he_l_faces_deleted, v_l_set_per_face) =>
+{
+	const result = he_l_faces_added.reduce(
+		(v_l_set_per_face_updated, curr_he_face_added) =>
+		{
+			const result = get_outside_points_of_current_face(
+				he_l_faces_deleted,
+				v_l_set_per_face_updated,
+				(vertex_to_test) => !he_is_above_3d_plane(vertex_to_test, he_l, curr_he_face_added)	
+			);
+			const curr = he_2_face_index(curr_he_face_added);
+			//console.log(curr, result[1]);
+			result[0][curr] = result[0][curr].concat(result[1])
+			return result[0];
+		}
+		,
+		v_l_set_per_face
+			.concat(new_ordered_int_list(he_l_faces_added.length).map(() => []))
+	);
+
+	let mmm = he_l_faces_deleted.reduce(
+		(v_l_set_per_face_updated, curr_he_face_deleted) =>
+			{
+				v_l_set_per_face_updated[he_2_face_index(curr_he_face_deleted)] = [];
+				return v_l_set_per_face_updated;
+			}
+		,
+		result
+	)
+
+	return mmm;
+}
+
+const remove_curr_v_furthest = (v_l_set_per_face, v_furthest) =>
+{
+	return v_l_set_per_face.map(
+		(v_l_set_local) =>
+			v_l_set_local.reduce(
+				(v_l_set_local_updated, v_curr) =>
+					v_curr === v_furthest
+						? v_l_set_local_updated
+						: v_l_set_local_updated.concat(v_curr)
+				,
+				[]
+			)
+	);
+};
 
 const quick_hull_3d_2 = (he_l_hull, v_l_set_per_face) =>
 {
@@ -155,7 +242,7 @@ const quick_hull_3d_2 = (he_l_hull, v_l_set_per_face) =>
 				> he_signed_dist_from_3d_plane(v_b, he_l_hull, he_curr_face)
 		)
 	);
-
+	
 	const [he_l_opened_hull, he_l_faces_deleted] = explore_and_remove_visible_faces_from_p(he_l_hull, he_curr_face, v_furthest);
 
 	const he_l_boundary = he_l_opened_hull.filter(
@@ -164,65 +251,49 @@ const quick_hull_3d_2 = (he_l_hull, v_l_set_per_face) =>
 
 	const [he_l_final_hull, he_l_faces_added] = he_l_boundary.reduce(
 		([he_l_hull, he_l_face_added], he_opposite) =>
-			[
-				concat_face(
-					he_l_hull, 
-					[
-						he_to_vert(he_l_hull, he_opposite),
-						he_from_vert(he_opposite),
-						v_furthest
-					]
-				),
-				he_l_face_added.concat(he_last_face_added(he_l_hull))
+		{
+			const l = concat_face(
+				he_l_hull, 
+				[
+					he_to_vert(he_l_hull, he_opposite),
+					he_from_vert(he_opposite),
+					v_furthest
+				]
+			);
+			return [
+				l,
+				he_l_face_added.concat(he_last_face_added(l))
 			]
+		}
 		,
 		[he_l_opened_hull, []]
 	);
 
-	/*console.table(he_l_faces_deleted);
-	console.table(he_l_faces_added);*/
+	/*console.log("deleted:")
+	console.table(he_l_faces_deleted.map((x)=>he_2_face_index(x)));
+	console.table(he_l_faces_deleted);
+	console.log("added:")
+	console.table(he_l_faces_added.map((x)=>he_2_face_index(x)));
+	console.table(he_l_faces_added);
+	console.log("set per face:")
+	console.table(v_l_set_per_face)*/
+	//console.warn("next");
 
-	/*pour chaque face f_a ajoutée:
-		pour chaque face f_s supprimée:
-			pour chaque point p_out de outside_set(f_s):
-				si p_out est au-dessus de f_a:
-					[]*/
+	const v_l_set_per_face_updated = remove_curr_v_furthest(v_l_set_per_face, v_furthest);
+			
+	/*let m = get_outside_point_of_face_based_on_condition(v_l_set_per_face, 3, (v) => Math.random()>.5)
+	console.table(m[0])
+	console.table(m[1])*/
+	/*let m = get_outside_points_of_current_face(he_l_faces_deleted, v_l_set_per_face, (v) => Math.random()<.0);
+	console.table(m[0])
+	console.table(m[1])*/
+	let r = reconstruct(he_l_final_hull, he_l_faces_added, he_l_faces_deleted, v_l_set_per_face_updated);
 	
-	/*const v_l_set_per_face_updated = he_l_faces_added.reduce(
-		(v_l_set_per_face_temp, he_face_added) => 
-			v_l_set_per_face_temp.map(
-				(sub_set, index) =>
-					he_2_face_index(he_face_added) === index
-					? he_l_faces_deleted.reduce(
-						(v_l_temp, he_face_deleted) => 
-							v_l_temp.concat(
-								v_l_set_per_face[he_2_face_index(he_face_deleted)].reduce(
-									(v_l_temp_2, v_curr) =>
-									{
-										return he_is_above_3d_plane(v_curr, he_l_final_hull, he_face_added)
-										? v_l_temp_2.concat(v_curr)
-										: v_l_temp_2
-									}
-									,
-									[]
-								)
-							)
-						,
-						[]
-					)
-					: sub_set
-			)
-		,
-		v_l_set_per_face
-			.concat(new_ordered_int_list(he_l_faces_added.length).map(() => []))
-	);*/
-	
-	/*console.table(he_l_faces_deleted)
-	console.table(he_l_faces_added)
+	/*console.log(v_l_set_per_face.reduce((x,y)=>x+y.length,0), r.reduce((x,y)=>x+y.length,0))
+	console.table(he_l_final_hull)
+	console.table(r)*/
 
-	console.table(v_l_set_per_face)
-	console.table(v_l_set_per_face_updated)*/
-	//console.log(he_is_above_3d_plane_for_deleted(0, he_l_faces_deleted, 0))
+	return quick_hull_3d_2(he_l_final_hull, r)
 }
 
 const quick_hull_3d = (v_vec3_l) =>
@@ -255,9 +326,9 @@ const quick_hull_3d = (v_vec3_l) =>
 		new_ordered_int_list(he_nb_faces(he_l_initial_simplex)).map(() => [])
 	);
 
-	quick_hull_3d_2(he_l_initial_simplex, v_l_set_per_face);
+	const res = quick_hull_3d_2(he_l_initial_simplex, v_l_set_per_face);
 
 	//console.table(he_l_initial_simplex)
 
-	return he_l_initial_simplex;
+	return res === undefined ? he_l_initial_simplex : res;
 }

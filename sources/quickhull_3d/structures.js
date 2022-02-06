@@ -45,12 +45,12 @@ const he_find_in_face = (he_l, condition_on_he) =>
 			: he_find_in_face(he_l.slice(0, he_l.length - 3), condition_on_he)
 ;
 
-const he_concat_face = (he_l_dest, he_l_source, he_source) =>
+/*const he_concat_face = (he_l_dest, he_l_source, he_source) =>
 	he_l_dest
 		.concat(he_source)
 		.concat(he_next(he_l_source, he_source))
 		.concat(he_prev(he_l_source, he_source))
-;
+;*/
 
 // half-edge -> integer
 const he_index = (he) => he.index;
