@@ -84,8 +84,7 @@ const look_up_for_opposite_he_index = (he_l, from_vert, to_vert) =>
 
 const concat_face_vertices = (he_l, vert_A, vert_B, vert_C) =>
 {
-	//GLOBAL_DISP.push_indices([vert_A, vert_B, vert_C]);
-	GLOBAL_DISP.push_he_l(he_l);
+	GLOBAL_DISP.push_he_l_hull(he_l);
 
 	const he_AB_index = he_l.length;
 	const he_BC_index = he_l.length + 1;
@@ -111,7 +110,7 @@ const concat_face_vertices = (he_l, vert_A, vert_B, vert_C) =>
 		.concat(new_he(he_CA_index, he_AB_index, he_CA_opposite_index, vert_C))
 	;
 
-	GLOBAL_DISP.push_he_l(he_l_result);
+	GLOBAL_DISP.push_he_l_hull(he_l_result);
 
 	return he_l_result;
 };
@@ -121,7 +120,7 @@ const remove_face = (he_l, he) => {
 	if(he_is_null(he))
 		console.error("Ne devrait pas arriver : suppression d'une face déjà supprimée.");
 
-	//GLOBAL_DISP.push_he_l(he_l);
+	GLOBAL_DISP.push_he_l_hull(he_l);
 
 	const he_A = he;
 	const he_B = he_next(he_l, he);
@@ -153,7 +152,7 @@ const remove_face = (he_l, he) => {
 		})
 	;
 
-	GLOBAL_DISP.push_he_l(he_l_result);
+	GLOBAL_DISP.push_he_l_hull(he_l_result);
 
 	return he_l_result;
 };

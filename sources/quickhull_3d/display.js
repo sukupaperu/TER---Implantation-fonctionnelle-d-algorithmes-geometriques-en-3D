@@ -82,7 +82,7 @@ void main()
         ? u_color - .85*shading
         : vec3(.5) - .25*shading;
 
-    fragColor = vec4(color, 1.);
+    fragColor = vec4(color, 1);
     
 }`;
 
@@ -226,7 +226,7 @@ class display
         this.vao_list.push(this.wgl.new_vao(list, this.vbo_vertices));
     }
 
-    push_he_l(he_l)
+    push_he_l_hull(he_l)
     {
         let list = [];
         he_for_each_faces(

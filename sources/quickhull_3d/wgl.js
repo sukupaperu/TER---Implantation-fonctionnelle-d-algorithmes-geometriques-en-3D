@@ -21,6 +21,7 @@ class wgl
         if(!this.gl) alert("WebGL n'est pas compatible avec ce navigateur.");
         this.gl.clearColor(.05, .05, .05, 1.);
         this.gl.enable(this.gl.DEPTH_TEST);
+        this.gl.enable(this.gl.BLEND); this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
         //this.gl.enable(this.gl.CULL_FACE);
         //this.gl.cullFace(this.gl.FRONT);
     }
