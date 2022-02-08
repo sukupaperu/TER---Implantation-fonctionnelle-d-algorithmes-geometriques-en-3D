@@ -47,8 +47,8 @@ void main()
     vec4 p = vec4(v_in, 1.);
 
     mat4 rot1 = rotateXZ(-u_mouse.x/u_resolution.x*6.28);
-    mat4 rot2 = rotateYZ(-u_mouse.y/u_resolution.y*6.28*.1);
-    mat4 rot = rot1*rot2;
+    //mat4 rot2 = rotateYZ(-u_mouse.y/u_resolution.y*6.28*.1);
+    mat4 rot = rot1; //*rot2;
 
     mat4 V = translate(vec3(0., 0., -1.75))*rot;
     mat4 P = project(.01, 10., 1./.5, 1.);
@@ -80,7 +80,7 @@ void main()
 
     vec3 color = gl_FrontFacing
         ? u_color - .85*shading
-        : vec3(.25) - .25*shading;
+        : vec3(.5) - .25*shading;
 
     fragColor = vec4(color, 1);
     
@@ -128,15 +128,15 @@ class display
     vao_all_vertices = null;
     vao_convex_hull = null;
     vao_list = [];
+    convex_hull_vao_list = [];
+    convex_furthest_point_vao_list = [];
 
     convex_hull_updating_state = 1;
-        current_hull_vao = null;
     face_removed_state = 2;
     face_added_state = 3;
     furthest_point_state = 4;
-        current_furthest_point_vao = null;
     
-    constructor(canvas_el, timeline_el)
+    constructor(canvas_el, timeline_el, autoplay_speed)
     {
         this.wgl = new wgl(canvas_el);
         this.gl = this.wgl.get_gl();
@@ -158,7 +158,7 @@ class display
         this.u_resolution = gl.getUniformLocation(this.shader_prg, "u_resolution");
         this.u_mouse = gl.getUniformLocation(this.shader_prg, "u_mouse");
         
-        this.repere = this.wgl.new_repere(.2);
+        //this.repere = this.wgl.new_repere(.2);
     }
 
     init_events()
@@ -287,9 +287,39 @@ class display
     {
         this.timeline_el.max = this.vao_list.length + 1;
         this.timeline_el.disabled = false;
+
+        for(let i = 0; i < this.vao_list.length; i++)
+        {
+            const [current_state, current_vao] = this.vao_list[i];
+
+            switch(current_state)
+            {
+                case this.convex_hull_updating_state:
+                    this.convex_hull_vao_list.push(current_vao);
+                    this.convex_furthest_point_vao_list.push(
+                        this.convex_furthest_point_vao_list[this.convex_furthest_point_vao_list.length - 1]
+                    );
+                    break;
+                case this.furthest_point_state:
+                    this.convex_furthest_point_vao_list.push(current_vao);
+                    this.convex_hull_vao_list.push(
+                        this.convex_hull_vao_list[this.convex_hull_vao_list.length - 1]
+                    );
+                    break;
+                case this.face_removed_state:
+                case this.face_added_state:
+                    this.convex_hull_vao_list.push(
+                        this.convex_hull_vao_list[this.convex_hull_vao_list.length - 1]
+                    );
+                    this.convex_furthest_point_vao_list.push(
+                        this.convex_furthest_point_vao_list[this.convex_furthest_point_vao_list.length - 1]
+                    );
+                    break;
+            }
+        }
     }
 
-    autoplay()
+    autoplay(autoplay_speed)
     {
         this.timeline_el.disabled = true;
         const autoplay_rec = (i) => {
@@ -300,7 +330,7 @@ class display
                     this.new_frame();
                     //this.wgl.capture_frame(1, frame" + "i);
                     autoplay_rec(i + 1);
-                }, 1/600);
+                }, autoplay_speed);
             }
             else
             {
@@ -333,13 +363,10 @@ class display
             );
 
             const current_i = clamp1(this.timeline_value, 0, this.vao_list.length - 1);
-            const [current_state, current_vao] = this.vao_list[current_i];
 
+            const [current_state, current_vao] = this.vao_list[current_i];
             switch(current_state)
             {
-                case this.convex_hull_updating_state:
-                    this.current_hull_vao = current_vao;
-                    break;
                 case this.face_removed_state:
                     current_vao.bind();
                     gl.uniform3f(this.u_color, 1, .125, 0);
@@ -356,35 +383,34 @@ class display
                     gl.uniform3f(this.u_color, 1, 1, 1);
                     gl.drawElements(gl.LINE_LOOP, current_vao.nb_tri, gl.UNSIGNED_INT, 0);
                     break;
-                case this.furthest_point_state:
-                    this.current_furthest_point_vao = current_vao;
-                    break;
             }
-
-            if(this.current_hull_vao !== null)
+            
+            const furthest_point_vao = this.convex_furthest_point_vao_list[current_i];
+            if(is_defined(furthest_point_vao))
             {
-                this.current_hull_vao.bind();
-                gl.uniform3f(this.u_color, 0, .5, 1);
-                gl.drawElements(gl.TRIANGLES, this.current_hull_vao.nb_tri, gl.UNSIGNED_INT, 0);
-                gl.uniform3f(this.u_color, 1, 1, 1);
-                gl.uniform1f(this.u_point_size, 3);
-                gl.drawElements(gl.POINTS, this.current_hull_vao.nb_tri, gl.UNSIGNED_INT, 0);
-            }
-
-            if(this.current_furthest_point_vao !== null)
-            {
-                this.current_furthest_point_vao.bind();
+                furthest_point_vao.bind();
                 gl.uniform3f(this.u_color, .125, 1, 0);
-                gl.uniform1f(this.u_point_size, 5);
+                gl.uniform1f(this.u_point_size, 7);
                 gl.drawElements(gl.POINTS, 1, gl.UNSIGNED_INT, 0);
+            }
+
+            const convex_hull = this.convex_hull_vao_list[current_i];
+            if(is_defined(convex_hull))
+            {
+                convex_hull.bind();
+                gl.uniform3f(this.u_color, 0, .5, 1);
+                gl.drawElements(gl.TRIANGLES, convex_hull.nb_tri, gl.UNSIGNED_INT, 0);
+                gl.uniform3f(this.u_color, 1, 1, 1);
+                gl.uniform1f(this.u_point_size, 4);
+                gl.drawElements(gl.POINTS, convex_hull.nb_tri, gl.UNSIGNED_INT, 0);
             }
 
             this.vao_all_vertices.bind();
             gl.uniform3f(this.u_color, 1, 1, 1);
-            gl.uniform1f(this.u_point_size, 1);
+            gl.uniform1f(this.u_point_size, 2);
             gl.drawElements(gl.POINTS, this.vao_all_vertices.nb_tri, gl.UNSIGNED_INT, 0);
 
-            this.repere.draw(this.u_color);
+            //this.repere.draw(this.u_color);
 
             gl.bindVertexArray(null);
             gl.useProgram(null);
