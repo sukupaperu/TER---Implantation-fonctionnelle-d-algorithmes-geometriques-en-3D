@@ -2,6 +2,10 @@
 
 // ---- Opérations sur les listes ----
 
+	const new_empty_list = () =>
+		[]
+	;
+
 	// int -> int list
 	const new_ordered_int_list = (n) =>
 		n === 0

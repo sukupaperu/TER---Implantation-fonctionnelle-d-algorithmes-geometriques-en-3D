@@ -40,7 +40,7 @@
 <script type="text/javascript">
 	"use strict";
 	// ------------- Génération de points aléatoires -------------
-	for (let i = 0; i < 100; i++)
+	for (let i = 0; i < 40; i++)
 	{
 		GLOBAL_V_LIST.push(
 			multiply3_1(
@@ -54,7 +54,8 @@
 						.5
 					)
 				),
-				Math.cbrt(Math.random())//*0 + 1
+				Math.cbrt(Math.random())*0 + 1
+				// Math.random()**10
 			)
 		);
 	}
@@ -81,7 +82,10 @@
 	// ------------- Exécution -------------
 	let t = performance.now();
 	let convex_hull = quick_hull_3d(GLOBAL_V_LIST);
-	console.info("Convexhull computation in: " + (performance.now() - t) + "ms")
+	console.info("Convex hull stats:");
+	console.info("\t-> Computation in: " + (performance.now() - t) + "ms");
+	console.info("\t-> " + GLOBAL_V_LIST.length + " vertices");
+	console.info("\t-> " + n_faces_in_dcel(convex_hull) + " triangles");
 
 	// console.table(convex_hull);
 	// convex_hull = remove_face(convex_hull, convex_hull[0]);

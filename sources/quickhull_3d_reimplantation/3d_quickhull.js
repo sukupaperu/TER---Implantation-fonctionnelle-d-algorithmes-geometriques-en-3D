@@ -1,23 +1,27 @@
 "use strict";
 
-const get_min_max = (v_l) =>
+// int list -> (int, int)
+const get_min_max = (vertex_index_list) =>
 {
-	const [min_max_x, min_max_y, min_max_z] = v_l.reduce(
-			(res, v) =>
-				[
-					[
-						V(v).x < V(res[0][0]).x ? v : res[0][0],
-						V(v).x > V(res[0][1]).x ? v : res[0][1]
-					],
-					[
-						V(v).y < V(res[1][0]).y ? v : res[1][0],
-						V(v).y > V(res[1][1]).y ? v : res[1][1]
-					],
-					[
-						V(v).z < V(res[2][0]).z ? v : res[2][0],
-						V(v).z > V(res[2][1]).z ? v : res[2][1]
-					]
-				]
+	const [min_max_x, min_max_y, min_max_z] = vertex_index_list.reduce(
+			(res, vert) =>
+				{
+					const curr_vert = V(vert);
+					return [
+						[
+							curr_vert.x < V(res[0][0]).x ? vert : res[0][0],
+							curr_vert.x > V(res[0][1]).x ? vert : res[0][1]
+						],
+						[
+							curr_vert.y < V(res[1][0]).y ? vert : res[1][0],
+							curr_vert.y > V(res[1][1]).y ? vert : res[1][1]
+						],
+						[
+							curr_vert.z < V(res[2][0]).z ? vert : res[2][0],
+							curr_vert.z > V(res[2][1]).z ? vert : res[2][1]
+						]
+					];
+				}
 			,
 			[[0, 0], [0, 0], [0, 0]]
 		)
@@ -36,16 +40,18 @@ const get_min_max = (v_l) =>
 			: min_max_z;
 };
 
-const get_initial_simplex = (v_l) =>
+// int list -> (dcel, int list)
+const get_initial_hull = (outside_set) =>
 {
 	// liste de sommets du segment ab
-	const edge_ab = get_min_max(v_l);
+	const edge_ab = get_min_max(outside_set);
 	
-	// sommet c, le plus éloigné du segment ab parmi v_l
-	const v_c = v_l.reduce(
+	// sommet c, le plus éloigné du segment ab parmi 'outside_set'
+	const v_c = outside_set.reduce(
 		first_arg_if_true(
-			(v_c1,v_c2) =>
-				dist_from_3d_segment(v_c1, edge_ab) > dist_from_3d_segment(v_c2, edge_ab)
+			(vertex_index_kept, vertex_index_to_test) =>
+				dist_from_3d_segment(vertex_index_kept, edge_ab)
+				> dist_from_3d_segment(vertex_index_to_test, edge_ab)
 		)
 	);
 	
@@ -53,31 +59,33 @@ const get_initial_simplex = (v_l) =>
 	const tri_abc = edge_ab.concat(v_c);
 	
 	// sommet d, le plus éloigné du plan formé par le triangle abc
-	const v_d = v_l.reduce(
+	const v_d = outside_set.reduce(
 		first_arg_if_true(
-			(v_c1,v_c2) =>
-				dist_from_3d_plane(v_c1, tri_abc) > dist_from_3d_plane(v_c2, tri_abc)
+			(vertex_index_kept, vertex_index_to_test) =>
+				dist_from_3d_plane(vertex_index_kept, tri_abc)
+				> dist_from_3d_plane(vertex_index_to_test, tri_abc)
 		)
 	);
 	
-	// liste de sommets
+	// liste d'indices de sommets
 	// la liste (triangle abc) est réordonnée pour correctement orienter la face
 	const face_base_abc = 
 		is_above_3d_plane(v_d, tri_abc)
 			? [tri_abc[0], tri_abc[2], tri_abc[1]]
 			: tri_abc
 	;
-	// listes de sommets
-	// on construit les autres faces
+	// listes d'indices de sommets
+	// on construit les autres faces (listes d'indices de sommets)
 	const face_A = [face_base_abc[2], face_base_abc[1], v_d];
 	const face_B = [face_base_abc[1], face_base_abc[0], v_d];
 	const face_C = [face_base_abc[0], face_base_abc[2], v_d];
 	
-	// liste de sommets du tétrahèdre abcd
+	// liste d'indicaes de sommets du tétrahèdre abcd
 	const tetrahedron_abcd = tri_abc.concat(v_d);
-	// liste de sommets
-	// ensemble de sommets v_l mais sans les sommets du tétrahèdre abcd
-	const v_l_wo_initial_simplex_vertices = v_l.filter(
+
+	// liste d'indices de sommets
+	// ensemble de sommets 'outside_set' mais sans les sommets du tétrahèdre abcd
+	const updated_outside_set = outside_set.filter(
 		(v_curr) =>
 			!is_defined(tetrahedron_abcd.find(
 				(v_tetrahedron) => v_tetrahedron === v_curr
@@ -87,48 +95,47 @@ const get_initial_simplex = (v_l) =>
 	return [
 		// construction du tétrahèdre
 		add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list([], face_base_abc), face_A), face_B), face_C),
-		v_l_wo_initial_simplex_vertices
-	]
+		// on retourne également l'ensemble de points encore à l'extérieur du tétrahèdre
+		updated_outside_set
+	];
 }
 
-const explore_and_remove_visible_faces_from_p = (he_l, he, p) =>
+// dcel -> he -> int -> (dcel, he list)
+const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_vertex) =>
 {
-	const explore_and_remove_2 = ([he_l, he_l_deleted], he_opposite, p) =>
+	// (dcel, he list) -> he ->  -> (dcel, he list)
+	const remove_visible_faces2 = ([current_hull, deleted_he_list], previous_incident_he) =>
 	{
-		if(he_opposite == -1)
-		    return [he_l, he_l_deleted];
+		const oppo_he_index = opposite_he_index(previous_incident_he);
 
-		const he = he_l[he_opposite];
+		if(oppo_he_index == -1)
+		    return [current_hull, deleted_he_list];
 
-		if(he_is_null(he))
-			return [he_l, he_l_deleted];
+		const oppo_he = current_hull[oppo_he_index];
 
-		if(!he_is_above_3d_plane(p, he_l, he))
-			return [he_l, he_l_deleted];
+		if(he_is_null(oppo_he))
+			return [current_hull, deleted_he_list];
 
-		const he_left_opposite_index = opposite_he_index(previous_he(he_l, he));
-		const he_right_opposite_index = opposite_he_index(next_he(he_l, he));
+		if(!vertex_is_above_plane(tested_vertex, current_hull, oppo_he))
+			return [current_hull, deleted_he_list];
 
-			const new_he_l = remove_face(he_l, he);
-			const he_l_deleted_updated = he_l_deleted.concat(he);
-		const left_res = explore_and_remove_2([new_he_l, he_l_deleted_updated], he_left_opposite_index, p);
+		const updated_hull = remove_face(current_hull, oppo_he);
+		const updated_deleted_he_list = deleted_he_list.concat(oppo_he);
+		const curr_res = [updated_hull, updated_deleted_he_list];
 
-		const right_res = explore_and_remove_2(left_res, he_right_opposite_index, p);
+		const left_res = remove_visible_faces2(curr_res, previous_he(current_hull, oppo_he));
+		const right_res = remove_visible_faces2(left_res, next_he(current_hull, oppo_he));
 
 		return right_res;
 	}
 
-	const he_left_opposite_index = opposite_he_index(previous_he(he_l, he));
-	const he_right_opposite_index = opposite_he_index(next_he(he_l, he));
+	const updated_hull = remove_face(hull, source_incident_he);
+	const new_deleted_he_list = new_empty_list().concat(source_incident_he);
+	const curr_res = [updated_hull, new_deleted_he_list];
 
-	const new_he_l = remove_face(he_l, he);
-	const he_l_deleted = [].concat(he);
-
-	const middle_res = explore_and_remove_2([new_he_l, he_l_deleted], opposite_he_index(he), p);
-
-	const left_res = explore_and_remove_2(middle_res, he_left_opposite_index, p);
-
-	const right_res = explore_and_remove_2(left_res, he_right_opposite_index, p);
+	const middle_res = remove_visible_faces2(curr_res, source_incident_he);
+	const left_res = remove_visible_faces2(middle_res, previous_he(hull, source_incident_he));
+	const right_res = remove_visible_faces2(left_res, next_he(hull, source_incident_he));
 
 	return right_res;
 }
@@ -183,7 +190,7 @@ const reconstruct = (he_l, he_l_faces_added, he_l_faces_deleted, v_l_set_per_fac
 			const result = get_outside_points_of_current_face(
 				he_l_faces_deleted,
 				v_l_set_per_face_updated,
-				(vertex_to_test) => !he_is_above_3d_plane(vertex_to_test, he_l, curr_he_face_added)	
+				(vertex_to_test) => !vertex_is_above_plane(vertex_to_test, he_l, curr_he_face_added)	
 			);
 			const curr = face_index_from_he(curr_he_face_added);
 			//console.log(curr, result[1]);
@@ -223,39 +230,41 @@ const remove_curr_v_furthest = (v_l_set_per_face, v_furthest) =>
 	);
 };
 
-const quick_hull_3d_2 = (he_l_hull, v_l_set_per_face) =>
+const quick_hull_3d_2 = (current_hull, set_per_face) =>
 {
-	const he_face_index_found = v_l_set_per_face.findIndex(
+	const he_face_index_found = set_per_face.findIndex(
 		(v_l_subset) => !list_is_empty(v_l_subset)
 	);
 
 	if(he_face_index_found === -1)
-		return he_l_hull;
+		return current_hull;
 
-	const v_l_curr_set = v_l_set_per_face[he_face_index_found];
-	const he_curr_face = he_by_face_index(he_l_hull, he_face_index_found);
+	const v_l_curr_set = set_per_face[he_face_index_found];
+	const he_curr_face = he_by_face_index(current_hull, he_face_index_found);
 	
 	const v_furthest = v_l_curr_set.reduce(
 		first_arg_if_true(
 			(v_a, v_b) =>
-				he_signed_dist_from_3d_plane(v_a, he_l_hull, he_curr_face)
-				> he_signed_dist_from_3d_plane(v_b, he_l_hull, he_curr_face)
+				signed_dist_between_vertex_and_plane(v_a, current_hull, he_curr_face)
+				> signed_dist_between_vertex_and_plane(v_b, current_hull, he_curr_face)
 		)
 	);
+
+	GLOBAL_DISP.push_furthest_point_state(v_furthest);
 	
-	const [he_l_opened_hull, he_l_faces_deleted] = explore_and_remove_visible_faces_from_p(he_l_hull, he_curr_face, v_furthest);
+	const [he_l_opened_hull, he_l_faces_deleted] = remove_visible_faces_from_vertex(current_hull, he_curr_face, v_furthest);
 
 	const he_l_boundary = he_l_opened_hull.filter(
 		(he) => he_is_boundary(he)
 	);
 
 	const [he_l_final_hull, he_l_faces_added] = he_l_boundary.reduce(
-		([he_l_hull, he_l_face_added], he_opposite) =>
+		([current_hull, he_l_face_added], he_opposite) =>
 		{
 			const l = add_face_from_vertex_index_list(
-				he_l_hull, 
+				current_hull, 
 				[
-					destination_vertex_index_of_he(he_l_hull, he_opposite),
+					destination_vertex_index_of_he(current_hull, he_opposite),
 					source_vertex_index_of_he(he_opposite),
 					v_furthest
 				]
@@ -269,49 +278,33 @@ const quick_hull_3d_2 = (he_l_hull, v_l_set_per_face) =>
 		[he_l_opened_hull, []]
 	);
 
-	/*console.log("deleted:")
-	console.table(he_l_faces_deleted.map((x)=>he_2_face_index(x)));
-	console.table(he_l_faces_deleted);
-	console.log("added:")
-	console.table(he_l_faces_added.map((x)=>he_2_face_index(x)));
-	console.table(he_l_faces_added);
-	console.log("set per face:")
-	console.table(v_l_set_per_face)*/
-	//console.warn("next");
+	GLOBAL_DISP.push_convex_hull_state(he_l_final_hull);
 
-	const v_l_set_per_face_updated = remove_curr_v_furthest(v_l_set_per_face, v_furthest);
-			
-	/*let m = get_outside_point_of_face_based_on_condition(v_l_set_per_face, 3, (v) => Math.random()>.5)
-	console.table(m[0])
-	console.table(m[1])*/
-	/*let m = get_outside_points_of_current_face(he_l_faces_deleted, v_l_set_per_face, (v) => Math.random()<.0);
-	console.table(m[0])
-	console.table(m[1])*/
-	let r = reconstruct(he_l_final_hull, he_l_faces_added, he_l_faces_deleted, v_l_set_per_face_updated);
-	
-	/*console.log(v_l_set_per_face.reduce((x,y)=>x+y.length,0), r.reduce((x,y)=>x+y.length,0))
-	console.table(he_l_final_hull)
-	console.table(r)*/
+	const set_per_face_updated = remove_curr_v_furthest(set_per_face, v_furthest);
+
+	let r = reconstruct(he_l_final_hull, he_l_faces_added, he_l_faces_deleted, set_per_face_updated);
 
 	return quick_hull_3d_2(he_l_final_hull, r)
 }
 
-const quick_hull_3d = (v_vec3_l) =>
+const quick_hull_3d = (vec3_list) =>
 {
 	// liste de sommets
 	// ensemble de points initial
-	const v_l_initial_set = new_ordered_int_list(v_vec3_l.length);
+	const initial_set = new_ordered_int_list(list_length(vec3_list));
 	
-	// [liste de demi-arêtes, liste de sommets]
-	const [he_l_initial_simplex, v_l_initial_set_updated] = get_initial_simplex(v_l_initial_set);
+	// [dcel, vertex list]
+	const [initial_hull, initial_set_updated] = get_initial_hull(initial_set);
+
+	GLOBAL_DISP.push_convex_hull_state(initial_hull);
 
 	// liste (indexée par face) de listes de sommets
-	const v_l_set_per_face = v_l_initial_set_updated.reduce(
+	const v_l_set_per_face = initial_set_updated.reduce(
 		(v_l_set_per_face_temp, v_curr) =>
 		{
 			// cherche la demi-arête d'une face pour laquelle le sommet v_curr est visible
-			const he_found = he_l_initial_simplex.find(
-				(he_face) => he_is_above_3d_plane(v_curr, he_l_initial_simplex, he_face)
+			const he_found = initial_hull.find(
+				(he_face) => vertex_is_above_plane(v_curr, initial_hull, he_face)
 			);
 			return is_defined(he_found)
 				? v_l_set_per_face_temp.map(
@@ -322,12 +315,10 @@ const quick_hull_3d = (v_vec3_l) =>
 				)
 				: v_l_set_per_face_temp
 		},
-		new_ordered_int_list(n_faces_in_dcel(he_l_initial_simplex)).map(() => [])
+		[[],[],[],[]]
 	);
 
-	const res = quick_hull_3d_2(he_l_initial_simplex, v_l_set_per_face);
+	const final_hull = quick_hull_3d_2(initial_hull, v_l_set_per_face);
 
-	//console.table(he_l_initial_simplex)
-
-	return res === undefined ? he_l_initial_simplex : res;
+	return final_hull === undefined ? initial_hull : final_hull;
 }

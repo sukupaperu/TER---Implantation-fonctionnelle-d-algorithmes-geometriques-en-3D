@@ -1,7 +1,7 @@
 "use strict";
 
-// he : half-edge (demi-arête)
-// dcel : doubly connected edge list (liste particulière de he)
+// he : half-edge ; demi-arête
+// dcel : doubly connected edge list ; liste particulière de he
 
 // --- Constructeurs ---
 
@@ -69,9 +69,12 @@
 	;
 	
 	// dcel -> int
-	// REVOIR
 	const n_faces_in_dcel = (dcel) =>
-		list_length(dcel)/3
+		dcel.reduce(
+			(acc, he) =>
+				acc + (he_is_null(he) ? 0 : 1),
+			0
+		)/3
 	;
 
 // --- Accesseurs avancés ---
@@ -98,7 +101,7 @@
 
 	// dcel -> he -> int list
 	const vertex_index_list_from_face = (dcel, he) =>
-		[]
+		new_empty_list()
 		.concat(source_vertex_index_of_he(he))
 		.concat(destination_vertex_index_of_he(dcel, he))
 		.concat(destination_vertex_index_of_he(dcel, next_he(dcel, he)))
@@ -115,7 +118,7 @@
 	// dcel -> int -> int -> int -> dcel
 	const add_face_from_three_vertex_indices = (dcel, vert_A, vert_B, vert_C) =>
 	{
-		GLOBAL_DISP.push_he_l_hull(dcel);
+		GLOBAL_DISP.push_convex_hull_state(dcel);
 
 		const dcel_length = list_length(dcel);
 
@@ -123,6 +126,7 @@
 		const he_BC_index = dcel_length + 1;
 		const he_CA_index = dcel_length + 2;
 
+		// dcel -> int -> int -> int
 		const look_up_for_opposite_he_index = (dcel, src_vert_index, dest_vert_index) =>
 			look_up_index_in_list(
 				dcel, 
@@ -158,7 +162,7 @@
 			.concat(new_he(he_CA_index, he_AB_index, he_CA_opposite_index, vert_C))
 		;
 
-		GLOBAL_DISP.push_he_l_hull(final_dcel);
+		GLOBAL_DISP.push_face_added_state(vertex_index_list_from_face(final_dcel, last_he_added(final_dcel)));
 
 		return final_dcel;
 	};
@@ -178,8 +182,8 @@
 
 		if(he_is_null(he))
 			return dcel;
-
-		GLOBAL_DISP.push_he_l_hull(dcel);
+		
+		GLOBAL_DISP.push_face_removed_state(vertex_index_list_from_face(dcel, he));
 
 		const he_A = he;
 		const he_B = next_he(dcel, he);
@@ -212,7 +216,7 @@
 			})
 		;
 
-		GLOBAL_DISP.push_he_l_hull(final_dcel);
+		GLOBAL_DISP.push_convex_hull_state(final_dcel);
 
 		return final_dcel;
 	};
