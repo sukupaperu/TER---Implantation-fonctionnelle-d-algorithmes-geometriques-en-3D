@@ -17,13 +17,14 @@ class wgl
 
     init_wgl(c)
     {
-        this.gl = c.getContext("webgl2", { preserveDrawingBuffer: true });
-        if(!this.gl) alert("WebGL n'est pas compatible avec ce navigateur.");
-        this.gl.clearColor(.05, .05, .05, 1.);
-        this.gl.enable(this.gl.DEPTH_TEST);
-        this.gl.enable(this.gl.BLEND); this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+        const gl = c.getContext("webgl2", { preserveDrawingBuffer: true });
+        if(!gl) alert("WebGL n'est pas compatible avec ce navigateur.");
+        gl.clearColor(.025, .025, .025, 1.);
+        gl.enable(gl.DEPTH_TEST);
+        //gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         //this.gl.enable(this.gl.CULL_FACE);
         //this.gl.cullFace(this.gl.FRONT);
+        this.gl = gl;
     }
 
     canvas_size()
@@ -33,30 +34,32 @@ class wgl
 
     prepare_shader(type, src, info)
     {
-        let shader = this.gl.createShader(type);
-        this.gl.shaderSource(shader, src);
-        this.gl.compileShader(shader);
-        this.gl.flush();
-        if(this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) return shader;
+        const gl = this.get_gl();
+        let shader = gl.createShader(type);
+        gl.shaderSource(shader, src);
+        gl.compileShader(shader);
+        gl.flush();
+        if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
         console.error(info, "non compilé.");
-        console.error(this.gl.getShaderInfoLog(shader))
+        console.error(gl.getShaderInfoLog(shader))
         console.log(src);
-        this.gl.deleteShader(shader);
+        gl.deleteShader(shader);
         return null;
     }
 
     init_shader_program(vs_src, fs_src)
     {
-        let vs = this.prepare_shader(this.gl.VERTEX_SHADER, vs_src, "Vertex Shader");
-        let fs = this.prepare_shader(this.gl.FRAGMENT_SHADER, fs_src, "Fragment Shader");
-        let prg = this.gl.createProgram();
-        this.gl.attachShader(prg, vs);
-        this.gl.attachShader(prg, fs);
-        this.gl.flush();
-        this.gl.linkProgram(prg);
-        if (this.gl.getProgramParameter(prg, this.gl.LINK_STATUS)) return prg;
-        console.error(this.gl.getProgramInfoLog(prg));
-        this.gl.deleteProgram(prg);
+        const gl = this.get_gl();
+        let vs = this.prepare_shader(gl.VERTEX_SHADER, vs_src, "Vertex Shader");
+        let fs = this.prepare_shader(gl.FRAGMENT_SHADER, fs_src, "Fragment Shader");
+        let prg = gl.createProgram();
+        gl.attachShader(prg, vs);
+        gl.attachShader(prg, fs);
+        gl.flush();
+        gl.linkProgram(prg);
+        if (gl.getProgramParameter(prg, gl.LINK_STATUS)) return prg;
+        console.error(gl.getProgramInfoLog(prg));
+        gl.deleteProgram(prg);
         return null;
     }
 
@@ -73,57 +76,77 @@ class wgl
 
     new_vao(index_list, vbo_vertices)
     {
-        let vbo_indices = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(index_list), this.gl.STATIC_DRAW);
+        const gl = this.get_gl();
 
-        let vao = this.gl.createVertexArray();
-        this.gl.bindVertexArray(vao);
+        let vbo_indices = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(index_list), gl.STATIC_DRAW);
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo_vertices);
-        this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(0);
+        let vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
 
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo_vertices);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
 
-        this.gl.bindVertexArray(null);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
 
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+        let nb_tri = index_list.length;
         return {
             nb_tri: index_list.length,
             bind: () => {
-                this.gl.bindVertexArray(vao);
+                gl.bindVertexArray(vao);
+            },
+            draw_points: (u_color, [r,g,b], u_point_size, pt_sz) => {
+                gl.bindVertexArray(vao);
+                gl.uniform3f(u_color, r, g, b);
+                gl.uniform1f(u_point_size, pt_sz);
+                gl.drawElements(gl.POINTS, nb_tri, gl.UNSIGNED_INT, 0);
+            },
+            draw_triangles: (u_color, [r,g,b]) => {
+                gl.bindVertexArray(vao);
+                gl.uniform3f(u_color, r, g, b);
+                gl.drawElements(gl.TRIANGLES, nb_tri, gl.UNSIGNED_INT, 0);
+            },
+            draw_triangle_border: (u_color, [r,g,b]) => {
+                gl.bindVertexArray(vao);
+                gl.uniform3f(u_color, r, g, b);
+                gl.drawElements(gl.LINE_LOOP, nb_tri, gl.UNSIGNED_INT, 0);
             }
         };
     }
 
     new_repere(size)
     {
+        const gl = this.get_gl();
+
         let vbo_vertices = this.init_vbo_position([
             -size, 0, 0, size, 0, 0,
             0, -size, 0, 0, size, 0,
             0, 0, -size, 0, 0, size
         ]);
 
-        let vbo_indices = this.gl.createBuffer();
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint32Array([
+        let vbo_indices = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array([
             0, 1, 2, 3, 4, 5
-        ]), this.gl.STATIC_DRAW);
+        ]), gl.STATIC_DRAW);
 
-        let vao = this.gl.createVertexArray();
-        this.gl.bindVertexArray(vao);
+        let vao = gl.createVertexArray();
+        gl.bindVertexArray(vao);
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo_vertices);
-        this.gl.vertexAttribPointer(0, 3, this.gl.FLOAT, false, 0, 0);
-        this.gl.enableVertexAttribArray(0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, vbo_vertices);
+        gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(0);
 
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vbo_indices);
 
-        this.gl.bindVertexArray(null);
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
+        gl.bindVertexArray(null);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-        const gl = this.gl;
         return {
             draw: (u_color) => {
                 gl.bindVertexArray(vao);
