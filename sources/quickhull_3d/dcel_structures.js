@@ -29,6 +29,11 @@
 		set_he_opposite(he, -1)
 	;
 
+	// () -> dcel
+	const new_empty_dcel = () =>
+		new_empty_list()
+	;
+
 // --- Accesseurs ---
 
 	// he -> int

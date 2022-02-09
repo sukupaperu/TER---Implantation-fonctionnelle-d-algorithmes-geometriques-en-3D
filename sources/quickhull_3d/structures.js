@@ -2,10 +2,6 @@
 
 // ---- Opérations sur les listes ----
 
-	const new_empty_list = () =>
-		[]
-	;
-
 	// int -> int list
 	const new_ordered_int_list = (n) =>
 		n === 0
@@ -26,6 +22,11 @@
 
 
 // ---- Opérations sur les listes (ici volontairement en approche non-fonctionnelles) ----
+
+	// () -> any list
+	const new_empty_list = () =>
+		[]
+	;
 
 	// any list -> int
 	const list_length = (list) =>
@@ -56,3 +57,18 @@
 
 	const V = (index) =>
 		value_in_list_by_index(GLOBAL_V_LIST, index);
+
+
+
+
+const new_empty_oset = () =>
+	new_empty_list()
+;
+
+const add_in_oset = (oset, vertex_index) =>
+	oset.concat(vertex_index)
+;
+
+const remove_in_oset = (oset, index_of_vertex_index) =>
+	oset.filter((_, i) => i !== index_of_vertex_index)
+;

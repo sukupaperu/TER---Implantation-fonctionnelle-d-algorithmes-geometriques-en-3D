@@ -42,15 +42,15 @@
 	const GLOBAL_V_LIST = [];
 
 	// ------------- Génération de points aléatoires -------------
-	for (let i = 0; i < 80; i++)
+	for (let i = 0; i < 4; i++)
 	{
 		GLOBAL_V_LIST.push(
 			multiply3_1(
 				normalize3(
 					minus3_1(vec3(Math.random(), Math.random(), Math.random()), .5)
 				),
-				//Math.cbrt(Math.random())*1. + 1.
-				Math.random()**2
+				Math.cbrt(Math.random())
+				//Math.random()**2
 			)
 		);
 	}
@@ -83,7 +83,7 @@
 
 	GLOBAL_DISP.set_ready();
 	GLOBAL_DISP.new_frame();
-	GLOBAL_DISP.autoplay(250);
+	GLOBAL_DISP.autoplay(50);
 </script>
 
 </html>

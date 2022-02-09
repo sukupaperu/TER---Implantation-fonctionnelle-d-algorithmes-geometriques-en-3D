@@ -96,7 +96,7 @@ const get_initial_hull = (outside_set) =>
 
 	return [
 		// construction du tétrahèdre
-		add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list([], face_base_abc), face_A), face_B), face_C),
+		add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(new_empty_dcel(), face_base_abc), face_A), face_B), face_C),
 		// on retourne également l'ensemble de points encore à l'extérieur du tétrahèdre
 		updated_outside_set
 	];
