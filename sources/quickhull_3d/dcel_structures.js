@@ -61,6 +61,14 @@
 		source_vertex_index_of_he(next_he(dcel, he))
 	;
 
+	// dcel -> int -> he
+	const get_he_by_he_index = (dcel, he_index_to_find) =>
+		{
+			const res = dcel.find((he) => he_index(he) === he_index_to_find);
+			return is_defined(res) ? res : new_null_he();
+		}	
+	;
+
 // --- Propriétés ---
 
 	// he -> bool
@@ -69,14 +77,14 @@
 	;
 
 	// he -> bool
-	const he_is_boundary = (he) =>
-		!he_is_null(he) && opposite_he_index(he) === -1
+	const he_is_boundary = (he) =>//!he_is_null(he) && 
+		opposite_he_index(he) === -1
 	;
 	
 	// dcel -> int
 	const n_faces_in_dcel = (dcel) =>
 		dcel.reduce(
-			(acc, he) =>
+			(acc, he) => //acc + (he_is_null(he) ? 0 : 1),
 				acc + (he_is_null(he) ? 0 : 1),
 			0
 		)/3
@@ -86,12 +94,14 @@
 
 	// dcel -> he -> he
 	const opposite_he = (dcel, he) =>
-		value_in_list_by_index(dcel, opposite_he_index(he))
+		get_he_by_he_index(dcel, opposite_he_index(he))
+		//value_in_list_by_index(dcel, opposite_he_index(he))
 	;
 
 	// dcel -> he -> he
 	const next_he = (dcel, he) =>
-		value_in_list_by_index(dcel, next_he_index(he))
+		get_he_by_he_index(dcel, next_he_index(he))
+		//value_in_list_by_index(dcel, next_he_index(he))
 	;
 
 	// dcel -> he -> he
@@ -101,7 +111,8 @@
 
 	// dcel -> int -> he
 	const he_by_face_index = (dcel, face_index) =>
-		value_in_list_by_index(dcel, face_index*3)
+		get_he_by_he_index(dcel, face_index*3)
+		//value_in_list_by_index(dcel, face_index*3)
 	;
 
 	// dcel -> he -> int list
@@ -113,10 +124,22 @@
 	;
 
 	// he -> int
-	const face_index_from_he = (he) => Math.floor(he_index(he)/3);
+	const face_index_from_he = (he) =>
+		Math.floor(he_index(he)/3);
 
 	// dcel -> he
-	const last_he_added = (dcel) => value_in_list_by_index(dcel, list_length(dcel) - 1);
+	const last_he_added = (dcel) =>
+		value_in_list_by_index(dcel, list_length(dcel) - 1);
+
+	// decl -> int
+	const next_new_he_index = (dcel) => 
+		{
+			const last_he = last_he_added(dcel);
+			return is_defined(last_he)
+				? he_index(last_he) + 1
+				: 0
+		}
+	;
 
 // --- Opérations haut niveau pour dcel ---
 
@@ -125,20 +148,28 @@
 	{
 		GLOBAL_DISP.push_convex_hull_state(dcel);
 
-		const dcel_length = list_length(dcel);
+		const he_number = next_new_he_index(dcel);
 
-		const he_AB_index = dcel_length;
-		const he_BC_index = dcel_length + 1;
-		const he_CA_index = dcel_length + 2;
+		const he_AB_index = he_number;
+		const he_BC_index = he_number + 1;
+		const he_CA_index = he_number + 2;
 
 		// dcel -> int -> int -> int
 		const look_up_for_opposite_he_index = (dcel, src_vert_index, dest_vert_index) =>
-			look_up_index_in_list(
+			{
+				const res = dcel.find(
+					(he) =>
+						source_vertex_index_of_he(he) === dest_vert_index
+						&& destination_vertex_index_of_he(dcel, he) === src_vert_index
+				);
+				return is_defined(res) ? he_index(res) : -1;
+			}
+		/*look_up_index_in_list(
 				dcel, 
 				(he) =>
 					source_vertex_index_of_he(he) === dest_vert_index
 					&& destination_vertex_index_of_he(dcel, he) === src_vert_index
-			)
+			)*/
 		;
 
 		const he_AB_opposite_index = look_up_for_opposite_he_index(dcel, vert_A, vert_B);
@@ -148,17 +179,14 @@
 		const final_dcel = dcel
 			.map((current_he) =>
 			{
-				if(!he_is_null(current_he))
+				switch(he_index(current_he))
 				{
-					switch(he_index(current_he))
-					{
-						case he_AB_opposite_index:
-							return set_he_opposite(current_he, he_AB_index);
-						case he_BC_opposite_index:
-							return set_he_opposite(current_he, he_BC_index);
-						case he_CA_opposite_index:
-							return set_he_opposite(current_he, he_CA_index);
-					}
+					case he_AB_opposite_index:
+						return set_he_opposite(current_he, he_AB_index);
+					case he_BC_opposite_index:
+						return set_he_opposite(current_he, he_BC_index);
+					case he_CA_opposite_index:
+						return set_he_opposite(current_he, he_CA_index);
 				}
 				return current_he;
 			})
@@ -203,25 +231,45 @@
 		const he_C_opposite_index = opposite_he_index(he_C);
 
 		const final_dcel = dcel
-			.map((current_he) =>
-			{
-				if(!he_is_null(current_he))
+			.reduce(
+				(reduced_decl, current_he) => 
+				{
 					switch(he_index(current_he))
 					{
 						case he_A_index:
 						case he_B_index:
 						case he_C_index:
-							return new_null_he();
+							return reduced_decl;
 						case he_A_opposite_index:
 						case he_B_opposite_index:
 						case he_C_opposite_index:
-							return set_he_to_boundary_he(current_he);
+							return reduced_decl.concat(set_he_to_boundary_he(current_he));
+						default:
+							return reduced_decl.concat(current_he);
 					}
-				return current_he;
-			})
-		;
+				},
+				new_empty_dcel()
+			);
 
 		GLOBAL_DISP.push_convex_hull_state(final_dcel);
 
 		return final_dcel;
 	};
+
+	// const reduce_on_face = (dcel, reducer, initial_value) =>
+	// 	dcel.length === 0
+	// 		? initial_value
+	// 		: reducer(
+	// 			reduce_on_face(dcel.slice(0, -3), reducer, initial_value),
+	// 			dcel.slice(-1)[0],
+	// 			face_index_from_he(dcel.slice(-1)[0])
+	// 		)
+	// ;
+
+	const find_among_face = (dcel, predicate) =>
+		dcel.length === 0
+			? undefined
+			: predicate(dcel.slice(-1)[0])
+				? dcel.slice(-1)[0]
+				: find_among_face(dcel.slice(0, -3), predicate)
+	;
