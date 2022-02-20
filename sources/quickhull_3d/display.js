@@ -113,10 +113,10 @@ function he_for_each_vertices(dcel, he, action)
 }
 function he_for_each_faces(dcel, action)
 {
-    for(let i = 0; i < dcel.length; i += 3)
+    for(let i = 0; i < dcel.he_list.length; i += 3)
     {
-		if(!he_is_null(dcel[i]))
-        	action(dcel[i]);
+		if(!he_is_null(dcel.he_list[i]))
+        	action(dcel.he_list[i]);
     }
 }
 

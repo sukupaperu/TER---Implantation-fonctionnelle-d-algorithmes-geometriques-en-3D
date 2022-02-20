@@ -1,0 +1,185 @@
+\documentclass[]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{listings}
+\usepackage{color}
+\usepackage[french]{babel}
+\usepackage[all]{xy} % color,matrix,arrow
+
+\definecolor{lightgray}{rgb}{.9,.9,.9}
+\definecolor{darkgray}{rgb}{.4,.4,.4}
+\definecolor{purple}{rgb}{0.65, 0.12, 0.82}
+
+\lstdefinelanguage{JavaScript}{
+	keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break, const},
+	keywordstyle=\color{blue}\bfseries,
+	ndkeywords={class, export, boolean, throw, implements, import, this},
+	ndkeywordstyle=\color{darkgray}\bfseries,
+	identifierstyle=\color{black},
+	sensitive=false,
+	comment=[l]{//},
+	morecomment=[s]{/*}{*/},
+	commentstyle=\color{purple}\ttfamily,
+	stringstyle=\color{red}\ttfamily,
+	morestring=[b]',
+	morestring=[b]"
+}
+\lstset{
+	language=JavaScript,
+	backgroundcolor=\color{lightgray},
+	extendedchars=true,
+	basicstyle=\footnotesize\ttfamily,
+	showstringspaces=false,
+	showspaces=false,
+	numbers=left,
+	numberstyle=\footnotesize,
+	numbersep=9pt,
+	tabsize=2,
+	breaklines=true,
+	showtabs=false,
+	captionpos=b
+}
+
+%\usepackage{tikz}
+%\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix,arrows}
+
+\usepackage[left=2cm, right=2cm, top=2cm]{geometry}
+
+\title{Implantation fonctionnelle d'algorithmes géométriques en 3D}
+\author{Titouan Laurent}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Structures de données implémentées}
+
+\subsection{Données d'entrées}
+Un $vec3$ permet de modéliser aussi bien un point qu'un vecteur dans l'espace 3D. Les composantes sont données dans l'ordre usuel $x$, $y$ et $z$.
+\begin{lstlisting}
+const vec3 = (x, y, z) =>
+	({
+		x:x,
+		y:y,
+		z:z
+	})
+;
+\end{lstlisting}
+Dans le cas du problème du calcul de l'enveloppe convexe d'un ensemble de $n$ points, on travaille sur un ensemble de prédéfinis. Afin d'éviter toute ambiguïté dans l'identification de points individuels (deux points individuels peuvent partager les mêmes coordonnées spatiales), lesdits points sont stockés dans une liste de taille $n$, accessible en tant que variable globale du programme. Dès lors, un point est identifiable et accessible via son propre indice dans ladite liste.
+\\
+
+\subsection{Manipulation et stockage de l'enveloppe convexe}
+La structure en liste de demi-arêtes orientées (doubly connected edge list, abrégé DCEL) est parmi les plus communes qu'il soit dès lors que l'on souhaite modéliser un maillage topologique.\\\\
+Ici on implante une version plus limitée de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui est sans effet sur les capacités du programme final.
+
+\subsubsection{Demi-arête — $he$}
+Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Celles-ci sont les suivantes :
+\begin{itemize}
+	\item $index \in \mathbf{Z}$, un identifiant unique pour la demi-arête, avec :
+		\[
+			\left\{
+				\begin{array}{ll}
+					index = -1		& \mbox{si la demi-arête est nulle} \\
+					index \geq 0 	& \mbox{sinon.}
+				\end{array}
+			\right.
+		\]
+	\item $next \in \mathbf{N}$, l'identifiant de la demi-arête suivante.
+	\item $opposite \in \mathbf{Z}$, l'identifiant de la demi-arête opposée, avec :
+		\[
+			\left\{
+				\begin{array}{ll}
+					opposite = -1 		& \mbox{si la demi-arête n'a pas d'opposé (boundary)} \\
+					opposite \geq 0 	& \mbox{sinon.}
+				\end{array}
+			\right.
+		\]
+	\item $vertex \in \mathbf{N}$, l'indice du sommet incident dont elle est issue.
+\end{itemize}
+
+\subsubsection{Maillage triangulaire — $dcel$}
+Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle dispose des attributs suivants :
+\begin{itemize}
+	\item $he\_list$, une liste de $he$.
+	\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
+\end{itemize}
+
+\subsubsection{Exemple simple en 2D}
+Considérons le maillage suivant :
+\[
+	\entrymodifiers={+[o][F]}
+	\renewcommand{\labelstyle}{\textstyle}
+	\xymatrix@=4em @L=.25ex{
+		{}
+		\ar @^{-} [d]
+		\ar @^{-} [dr]
+		& {}
+		\ar @^{-} [l]
+		\\ {}
+		\ar @^{-} [r]
+		& {}
+		\ar @^{-} [u]
+	}
+\]
+
+La structure $dcel$ associée est alors la suivante :
+\[
+	\entrymodifiers={+[o][F]}
+	\renewcommand{\labelstyle}{\textstyle}
+	\xymatrix@=4em @L=.25ex{
+		{\color{red}0}
+		\ar @<.25ex> @^{->} [d] |{\color{blue}0}
+		\ar @<.25ex> @^{->} [dr] ^{\color{blue}4}
+		& {\color{red}1}
+		\ar @<.25ex> @^{->} [l] |{\color{blue}3}
+		\\ {\color{red}2}
+		\ar @<.25ex> @^{->} [r] |{\color{blue}1}
+		& {\color{red}3}
+		\ar @<.25ex> @^{->} [ul] ^{\color{blue}2}
+		\ar @<.25ex> @^{->} [u] |{\color{blue}5}
+	}
+\]
+\[
+	dcel\textbf{ : }
+	\left\{
+		he\_list\textbf{ : }
+		\begin{array}{l}
+			\begin{tabular}{|c|c|c|c|}
+				\hline
+				index & next & opposite & vertex \\
+				\hline
+				\color{blue}0 & \color{blue}1 & -1 & \color{red}0 \\
+				\hline
+				\color{blue}1 & \color{blue}2 & -1 & \color{red}2 \\
+				\hline
+				\color{blue}2 & \color{blue}0 & \color{blue}4 & \color{red}3 \\
+				\hline
+				\color{blue}3 & \color{blue}4 & -1 & \color{red}1 \\
+				\hline
+				\color{blue}4 & \color{blue}5 & \color{blue}2 & \color{red}0 \\
+				\hline
+				\color{blue}5 & \color{blue}3 & -1 & \color{red}3 \\
+				\hline
+			\end{tabular}\\
+			available\_he\_index\textbf{ : }6
+		\end{array}
+	\right.
+\]
+\[
+	\textbf{Liste globale des indices : }
+	\begin{tabular}{|c|c|}
+		\hline
+		Indice & Coordonnées \\
+		\hline
+		\color{red}0 & (0,0) \\
+		\hline
+		\color{red}1 & (1,0) \\
+		\hline
+		\color{red}2 & (1,1) \\
+		\hline
+		\color{red}3 & (0,1) \\
+		\hline
+	\end{tabular}
+\]
+\end{document}

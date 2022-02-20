@@ -95,7 +95,13 @@ const get_initial_hull = (outside_set) =>
 	);
 
 	// construction du tétrahèdre
-	const tetrahedron = add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(add_face_from_vertex_index_list(new_empty_dcel(), face_base_abc), face_A), face_B), face_C);
+	const tetrahedron =
+		add_face_from_vertex_index_list(
+			add_face_from_vertex_index_list(
+				add_face_from_vertex_index_list(
+					add_face_from_vertex_index_list(
+						new_empty_dcel(), face_base_abc), face_A), face_B), face_C)
+	;
 
 	const final_outside_set = updated_outside_set.reduce(
 		(constructed_oset, current_vertex) => {
@@ -164,12 +170,16 @@ const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_verte
 	return right_res;
 }
 
+const l1 = [], l2 = [];
 const quick_hull_3d_2 = (current_hull, outside_set) =>
 {
 	const current_subset = first_osubset(outside_set);
 
 	if(!is_defined(current_subset))
 		return current_hull;
+
+	l1.push(outside_set.map((x) => x.list.length).length)
+	l2.push(outside_set.reduce((x,y) => x + y.list.length, 0))
 
 	const he_of_current_face = he_by_face_index(current_hull, osubset_face_index(current_subset));
 
@@ -180,16 +190,12 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 				> signed_dist_between_vertex_and_plane(vertex_b, current_hull, he_of_current_face)
 		)
 	);
-	
-	/*console.warn()
-	console.table(outside_set)
-	console.log(furthest_vertex)*/
 
 	GLOBAL_DISP.push_furthest_point_state(furthest_vertex);
 	
 	const [opened_hull, removed_face_list] = remove_visible_faces_from_vertex(current_hull, he_of_current_face, furthest_vertex);
 	
-	const boundary_he_list = opened_hull.filter(
+	const boundary_he_list = opened_hull.he_list.filter(
 		(he) => he_is_boundary(he)
 	);
 
@@ -228,18 +234,7 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 						? () => true
 						: (vertex_to_test) =>
 							!vertex_is_above_plane(vertex_to_test, final_hull, current_added_he)
-				/*(current_face_index) => (vertex_to_test) =>
-					!is_defined(removed_face_list.find(
-						(current_removed_he) =>
-							face_index_from_he(current_removed_he)
-							=== current_face_index
-					))
-					|| !vertex_is_above_plane(vertex_to_test, final_hull, current_added_he)*/
 			);
-
-			/*console.info()
-			console.table(outside_set_1)
-			console.table(removed_from_outside_set)*/
 
 			return [
 				outside_set_1,
@@ -267,12 +262,6 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 
 	let w = ll.concat(rr)
 
-	/*console.info()
-	console.table(removed_face_list)
-	console.table(removed_face_list.map((m)=>face_index_from_he(m)))
-	console.table(rr)
-	console.table(ll)*/
-
 	return quick_hull_3d_2(final_hull, w)
 }
 
@@ -286,9 +275,6 @@ const quick_hull_3d = (vec3_list) =>
 	const [initial_hull, outside_set] = get_initial_hull(initial_set);
 
 	GLOBAL_DISP.push_convex_hull_state(initial_hull);
-
-	console.table(initial_hull)
-	console.table(outside_set)
 
 	const final_hull = quick_hull_3d_2(initial_hull, outside_set);
 
