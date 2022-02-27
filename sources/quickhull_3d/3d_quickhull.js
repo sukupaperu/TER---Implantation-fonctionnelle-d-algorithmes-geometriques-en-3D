@@ -1,9 +1,9 @@
 "use strict";
 
 // int list -> (int, int)
-const get_min_max = (vertex_index_list) =>
+const get_min_max = (vertex_list) =>
 {
-	const [min_max_x, min_max_y, min_max_z] = vertex_index_list.reduce(
+	const [min_max_x, min_max_y, min_max_z] = vertex_list.reduce(
 			(res, vert) =>
 				{
 					const curr_vert = V(vert);
@@ -40,117 +40,108 @@ const get_min_max = (vertex_index_list) =>
 			: min_max_z;
 };
 
-// int list -> (dcel, int list)
-const get_initial_hull = (outside_set) =>
+// int list -> (dcel, oset)
+const get_initial_hull = (vertex_list) =>
 {
-	// liste de sommets du segment ab
-	const edge_ab = get_min_max(outside_set);
+	// deux sommets les plus éloignés
+	const [v_a, v_b] = get_min_max(vertex_list);
 	
-	// sommet c, le plus éloigné du segment ab parmi 'outside_set'
-	const v_c = outside_set.reduce(
+	// sommet c, le plus éloigné du segment ab
+	const v_c = vertex_list.reduce(
 		first_arg_if_true(
-			(vertex_index_kept, vertex_index_to_test) =>
-				dist_from_3d_segment(vertex_index_kept, edge_ab)
-				> dist_from_3d_segment(vertex_index_to_test, edge_ab)
+			(kept_vertex, current_vertex) =>
+				dist_from_3d_segment(kept_vertex, v_a, v_b)
+				> dist_from_3d_segment(current_vertex, v_a, v_b)
 		)
 	);
 	
-	// liste de sommets du triangle abc
-	const tri_abc = edge_ab.concat(v_c);
-	
 	// sommet d, le plus éloigné du plan formé par le triangle abc
-	const v_d = outside_set.reduce(
+	const v_d = vertex_list.reduce(
 		first_arg_if_true(
-			(vertex_index_kept, vertex_index_to_test) =>
-				dist_from_3d_plane(vertex_index_kept, tri_abc)
-				> dist_from_3d_plane(vertex_index_to_test, tri_abc)
+			(kept_vertex, current_vertex) =>
+				absolute_dist_from_plane(kept_vertex, v_a, v_b, v_c)
+				> absolute_dist_from_plane(current_vertex, v_a, v_b, v_c)
 		)
 	);
 
 	GLOBAL_DISP.push_furthest_point_state(v_d);
-	
-	// liste d'indices de sommets
-	// la liste (triangle abc) est réordonnée pour correctement orienter la face
-	const face_base_abc = 
-		is_above_3d_plane(v_d, tri_abc)
-			? [tri_abc[0], tri_abc[2], tri_abc[1]]
-			: tri_abc
-	;
-	// listes d'indices de sommets
-	// on construit les autres faces (listes d'indices de sommets)
-	const face_A = [face_base_abc[2], face_base_abc[1], v_d];
-	const face_B = [face_base_abc[1], face_base_abc[0], v_d];
-	const face_C = [face_base_abc[0], face_base_abc[2], v_d];
-	
-	// liste d'indicaes de sommets du tétrahèdre abcd
-	const tetrahedron_abcd = tri_abc.concat(v_d);
-
-	// liste d'indices de sommets
-	// ensemble de sommets 'outside_set' mais sans les sommets du tétrahèdre abcd
-	const updated_outside_set = outside_set.filter(
-		(v_curr) =>
-			!is_defined(tetrahedron_abcd.find(
-				(v_tetrahedron) => v_tetrahedron === v_curr
-			))
-	);
 
 	// construction du tétrahèdre
-	const tetrahedron =
-		add_face_from_vertex_index_list(
-			add_face_from_vertex_index_list(
-				add_face_from_vertex_index_list(
-					add_face_from_vertex_index_list(
-						new_empty_dcel(), face_base_abc), face_A), face_B), face_C)
+	const tetrahedron_hull =
+		vertex_is_above_plane(v_d, v_a, v_b, v_c)
+			?	add_face(
+				add_face(
+				add_face(
+				add_face(
+					new_empty_dcel(),
+				v_a, v_c, v_b),
+				v_b, v_c, v_d),
+				v_c, v_a, v_d),
+				v_a, v_b, v_d)
+			:	add_face(
+				add_face(
+				add_face(
+				add_face(
+					new_empty_dcel(),
+				v_a, v_b, v_c),
+				v_c, v_b, v_d),
+				v_b, v_a, v_d),
+				v_a, v_c, v_d)
 	;
 
-	const final_outside_set = updated_outside_set.reduce(
-		(constructed_oset, current_vertex) => {
-
-			const he_found = find_among_face(tetrahedron,
-				(he_from_current_face) => vertex_is_above_plane(current_vertex, tetrahedron, he_from_current_face)
+	// calcul des sous-ensemble de points extérieurs pour chaque face du tétrahèdre
+	const outside_set = vertex_list.filter(
+		(v_curr) =>
+			v_curr !== v_a
+			&& v_curr !== v_b
+			&& v_curr !== v_c
+			&& v_curr !== v_d
+	).reduce(
+		(outside_set, current_vertex) =>
+		{
+			const he_found = find_among_dcel_faces(tetrahedron_hull,
+				(incident_he_of_face) =>
+					vertex_is_above_face_plane(current_vertex, tetrahedron_hull, incident_he_of_face)
 			);
 			
-			return is_defined(he_found)
-				? add_in_oset(constructed_oset, face_index_from_he(he_found), current_vertex)
-				: constructed_oset
+			return he_is_null(he_found)
+				? outside_set
+				: add_vertex_in_oset(outside_set, he_found, current_vertex)
 			;
-		},
-		new_empty_oset()
-			.concat(new_empty_osubset(0))
-			.concat(new_empty_osubset(1))
-			.concat(new_empty_osubset(2))
-			.concat(new_empty_osubset(3))
+		}
+		,
+		add_empty_osubset(add_empty_osubset(add_empty_osubset(add_empty_osubset(
+			new_empty_oset(), 0), 1), 2), 3)
 	);
 
 	return [
-		tetrahedron,
-		// on retourne également l'ensemble de points encore à l'extérieur du tétrahèdre
-		remove_empty_osubset(final_outside_set)
+		tetrahedron_hull,
+		remove_empty_osubset(outside_set)
 	];
 }
 
-// dcel -> he -> int -> (dcel, he list)
+// dcel -> he -> int -> (dcel, int list)
 const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_vertex) =>
 {
-	// (dcel, he list) -> he ->  -> (dcel, he list)
+	// (dcel, int list) -> he -> (dcel, int list)
 	const remove_visible_faces2 = ([current_hull, deleted_he_list], previous_incident_he) =>
 	{
-		const oppo_he_index = opposite_he_index(previous_incident_he);
+		if(he_is_boundary(previous_incident_he))
+			return [current_hull, deleted_he_list];	    
 
-		if(oppo_he_index == -1)
-		    return [current_hull, deleted_he_list];
-
-		//const oppo_he = current_hull[oppo_he_index];
-		const oppo_he = get_he_by_he_index(current_hull, oppo_he_index);
+		const oppo_he = get_he_by_he_index(
+			current_hull,
+			opposite_he_index(previous_incident_he)
+		);
 
 		if(he_is_null(oppo_he))
 			return [current_hull, deleted_he_list];
 
-		if(!vertex_is_above_plane(tested_vertex, current_hull, oppo_he))
+		if(!vertex_is_above_face_plane(tested_vertex, current_hull, oppo_he))
 			return [current_hull, deleted_he_list];
 
 		const updated_hull = remove_face(current_hull, oppo_he);
-		const updated_deleted_he_list = deleted_he_list.concat(oppo_he);
+		const updated_deleted_he_list = deleted_he_list.concat(face_index_from_he(oppo_he));
 		const curr_res = [updated_hull, updated_deleted_he_list];
 
 		const left_res = remove_visible_faces2(curr_res, previous_he(current_hull, oppo_he));
@@ -160,7 +151,7 @@ const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_verte
 	}
 
 	const updated_hull = remove_face(hull, source_incident_he);
-	const new_deleted_he_list = new_empty_list().concat(source_incident_he);
+	const new_deleted_he_list = new_empty_list().concat(face_index_from_he(source_incident_he));
 	const curr_res = [updated_hull, new_deleted_he_list];
 
 	const middle_res = remove_visible_faces2(curr_res, source_incident_he);
@@ -170,7 +161,6 @@ const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_verte
 	return right_res;
 }
 
-const l1 = [], l2 = [];
 const quick_hull_3d_2 = (current_hull, outside_set) =>
 {
 	const current_subset = first_osubset(outside_set);
@@ -178,16 +168,13 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 	if(!is_defined(current_subset))
 		return current_hull;
 
-	l1.push(outside_set.map((x) => x.list.length).length)
-	l2.push(outside_set.reduce((x,y) => x + y.list.length, 0))
-
 	const he_of_current_face = he_by_face_index(current_hull, osubset_face_index(current_subset));
 
-	const furthest_vertex = osubset_element_list(current_subset).reduce(
+	const furthest_vertex = osubset_vertex_list(current_subset).reduce(
 		first_arg_if_true(
 			(vertex_a, vertex_b) => 
-				signed_dist_between_vertex_and_plane(vertex_a, current_hull, he_of_current_face)
-				> signed_dist_between_vertex_and_plane(vertex_b, current_hull, he_of_current_face)
+				signed_dist_from_face_plane(vertex_a, current_hull, he_of_current_face)
+				> signed_dist_from_face_plane(vertex_b, current_hull, he_of_current_face)
 		)
 	);
 
@@ -201,16 +188,18 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 
 	const [final_hull, added_face_list] = boundary_he_list.reduce(
 		([current_hull, constructed_added_face_list], current_he_opposite) => {
-			const updated_hull = add_face_from_three_vertex_indices(
+			const updated_hull = add_face(
 				current_hull,
-				destination_vertex_index_of_he(current_hull, current_he_opposite),
-				source_vertex_index_of_he(current_he_opposite),
+				destination_vertex_of_he(current_hull, current_he_opposite),
+				source_vertex_of_he(current_he_opposite),
 				furthest_vertex
 			);
 
 			return [
 				updated_hull,
-				constructed_added_face_list.concat(last_he_added(updated_hull))
+				constructed_added_face_list.concat(
+					face_index_from_he(last_he_added(updated_hull))
+				)
 			]
 		},
 		[opened_hull, new_empty_list()]
@@ -220,64 +209,64 @@ const quick_hull_3d_2 = (current_hull, outside_set) =>
 
 	const updated_outside_set = remove_in_oset(outside_set, furthest_vertex);
 
-	const [l,r] = added_face_list.reduce(
-		([outside_set_0, added_outside_set_0], current_added_he) => {
+	const [updated_outside_set_1, untreated_set] = 
+		filter_oset_and_get_removed_list(
+			updated_outside_set,
+			(osubset_face_index) =>
+				!is_defined(removed_face_list.find(
+					(removed_face_index) => removed_face_index === osubset_face_index
+				))
+		);
+	;
 
-			const [outside_set_1, removed_from_outside_set] = filter_and_part_oset(
-				outside_set_0,
-				(current_face_index) =>
-					!is_defined(removed_face_list.find(
-						(current_removed_he) =>
-							face_index_from_he(current_removed_he)
-							=== current_face_index
-					))
-						? () => true
-						: (vertex_to_test) =>
-							!vertex_is_above_plane(vertex_to_test, final_hull, current_added_he)
-			);
+	const oset_temp = added_face_list.reduce(
+			(constructed_oset, added_face_index) =>
+				add_empty_osubset(constructed_oset, added_face_index),
+			new_empty_oset()
+		)
+	;
 
-			return [
-				outside_set_1,
-				add_osubset(added_outside_set_0,
-					new_osubset(face_index_from_he(current_added_he), removed_from_outside_set)
-				)
-			];
-		}
-		,
-		[updated_outside_set, new_empty_oset()]
-	);
+	const final_final_outside_set = 
+		untreated_set.reduce(
+			(constructed_oset, current_vertex) =>
+			{
+				const face_index_found = added_face_list.find(
+					(added_face) => vertex_is_above_face_plane(
+						current_vertex,
+						final_hull,
+						he_by_face_index(final_hull, added_face)
+					)
+				);
+				
+				return is_defined(face_index_found)
+					? add_vertex_in_oset(
+						constructed_oset,
+						he_by_face_index(final_hull, face_index_found), 
+						current_vertex
+					)
+					: constructed_oset
+				;
+			},
+			oset_temp
+		)
+	;
 
-	let ll = remove_empty_osubset(l).filter(
-		(current_subset) =>
-			!is_defined(
-				removed_face_list.find(
-					(current_removed_he) =>
-						face_index_from_he(current_removed_he)
-						=== osubset_face_index(current_subset)
-				)
-			)
-	);
-
-	let rr = remove_empty_osubset(r);
-
-	let w = ll.concat(rr)
+	const w = remove_empty_osubset(updated_outside_set_1.concat(final_final_outside_set));
 
 	return quick_hull_3d_2(final_hull, w)
 }
 
 const quick_hull_3d = (vec3_list) =>
 {
-	// liste de sommets
-	// ensemble de points initial
-	const initial_set = new_ordered_int_list(list_length(vec3_list));
+	// liste de tous les sommets
+	const vertex_list = new_ordered_int_list(list_length(vec3_list));
 	
 	// [dcel, vertex list]
-	const [initial_hull, outside_set] = get_initial_hull(initial_set);
+	const [initial_hull, outside_set] = get_initial_hull(vertex_list);
 
 	GLOBAL_DISP.push_convex_hull_state(initial_hull);
 
 	const final_hull = quick_hull_3d_2(initial_hull, outside_set);
 
 	return final_hull === undefined ? initial_hull : final_hull;
-	//return initial_hull;
 }

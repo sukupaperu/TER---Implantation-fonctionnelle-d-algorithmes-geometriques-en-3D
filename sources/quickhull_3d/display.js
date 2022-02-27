@@ -106,9 +106,9 @@ void main()
 function he_for_each_vertices(dcel, he, action)
 {
     action(
-        source_vertex_index_of_he(he),
-        source_vertex_index_of_he(next_he(dcel, he)),
-        source_vertex_index_of_he(previous_he(dcel, he))
+        source_vertex_of_he(he),
+        source_vertex_of_he(next_he(dcel, he)),
+        source_vertex_of_he(previous_he(dcel, he))
     );
 }
 function he_for_each_faces(dcel, action)

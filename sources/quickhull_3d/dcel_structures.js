@@ -6,22 +6,25 @@
 // --- Constructeurs ---
 
 	// int -> int -> int -> int -> he
-	const new_he = (he_index, next_he_index, opposite_he_index, source_vertex_index) => 
+	const new_he = (he_index, opposite_he_index, source_vertex) => 
 	({
 		index: he_index, 			// indice de 'he' dans sa 'dcel'
-		next: next_he_index,		// indice de l'arête suivante dans sa 'dcel'
 		opposite: opposite_he_index,// indice de l'arête opposée dans sa 'dcel'
-		vertex: source_vertex_index	// indice du sommet source dans sa 'vertex_list'
+		vertex: source_vertex	// indice du sommet source dans sa 'vertex_list'
 	});
 
 	// () -> he
 	const new_null_he = () =>
-		new_he(-1, 0, 0, 0)
+		new_he(-1, 0, 0)
 	;
 
 	// he -> int -> he
 	const set_he_opposite = (he, new_opposite_index) =>
-		new_he(he.index, he.next, new_opposite_index, he.vertex)
+		new_he(
+			he_index(he),
+			new_opposite_index,
+			source_vertex_of_he(he)
+		)
 	;
 
 	// he -> he
@@ -51,7 +54,14 @@
 
 	// he -> int
 	const next_he_index = (he) =>
-		he.next
+		(he_index(he) - he_index(he)%3)
+			+ (he_index(he) + 1)%3
+	;
+
+	// he -> int
+	const previous_he_index = (he) =>
+		(he_index(he) - he_index(he)%3)
+			+ (3 + he_index(he) - 1)%3
 	;
 
 	// he -> int
@@ -60,20 +70,20 @@
 	;
 
 	// he -> int
-	const source_vertex_index_of_he = (he) =>
+	const source_vertex_of_he = (he) =>
 		he.vertex
 	;
 
 	// dcel -> he -> int
-	const destination_vertex_index_of_he = (dcel, he) =>
-		source_vertex_index_of_he(next_he(dcel, he))
+	const destination_vertex_of_he = (dcel, he) =>
+		source_vertex_of_he(next_he(dcel, he))
 	;
 
 	// dcel -> int -> he
 	const get_he_by_he_index = (dcel, he_index_to_find) =>
 		{
-			const res = dcel.he_list.find((he) => he_index(he) === he_index_to_find);
-			return is_defined(res) ? res : new_null_he();
+			const he_found = dcel.he_list.find((he) => he_index(he) === he_index_to_find);
+			return is_defined(he_found) ? he_found : new_null_he();
 		}	
 	;
 
@@ -112,7 +122,7 @@
 
 	// dcel -> he -> he
 	const previous_he = (dcel, he) =>
-		next_he(dcel, next_he(dcel, he))
+		get_he_by_he_index(dcel, previous_he_index(he))
 	;
 
 	// dcel -> int -> he
@@ -121,11 +131,11 @@
 	;
 
 	// dcel -> he -> int list
-	const vertex_index_list_from_face = (dcel, he) =>
+	const vertex_list_from_face = (dcel, he) =>
 		new_empty_list()
-		.concat(source_vertex_index_of_he(he))
-		.concat(destination_vertex_index_of_he(dcel, he))
-		.concat(destination_vertex_index_of_he(dcel, next_he(dcel, he)))
+		.concat(source_vertex_of_he(he))
+		.concat(destination_vertex_of_he(dcel, he))
+		.concat(destination_vertex_of_he(dcel, next_he(dcel, he)))
 	;
 
 	// he -> int
@@ -139,7 +149,7 @@
 // --- Opérations haut niveau pour dcel ---
 
 	// dcel -> int -> int -> int -> dcel
-	const add_face_from_three_vertex_indices = (dcel, vert_A, vert_B, vert_C) =>
+	const add_face = (dcel, vert_A, vert_B, vert_C) =>
 	{
 		GLOBAL_DISP.push_convex_hull_state(dcel);
 
@@ -152,8 +162,8 @@
 			{
 				const res = dcel.he_list.find(
 					(he) =>
-						source_vertex_index_of_he(he) === dest_vert_index
-						&& destination_vertex_index_of_he(dcel, he) === src_vert_index
+						source_vertex_of_he(he) === dest_vert_index
+						&& destination_vertex_of_he(dcel, he) === src_vert_index
 				);
 				return is_defined(res) ? he_index(res) : -1;
 			}
@@ -177,27 +187,17 @@
 					}
 					return current_he;
 				})
-				.concat(new_he(he_AB_index, he_BC_index, he_AB_opposite_index, vert_A))
-				.concat(new_he(he_BC_index, he_CA_index, he_BC_opposite_index, vert_B))
-				.concat(new_he(he_CA_index, he_AB_index, he_CA_opposite_index, vert_C))
+				.concat(new_he(he_AB_index, he_AB_opposite_index, vert_A))
+				.concat(new_he(he_BC_index, he_BC_opposite_index, vert_B))
+				.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C))
 			,
 			dcel.available_he_index + 3
 		);
 
-		GLOBAL_DISP.push_face_added_state(vertex_index_list_from_face(final_dcel, last_he_added(final_dcel)));
+		GLOBAL_DISP.push_face_added_state(vertex_list_from_face(final_dcel, last_he_added(final_dcel)));
 
 		return final_dcel;
 	};
-
-	// dcel -> int list -> dcel
-	const add_face_from_vertex_index_list = (dcel, v_index_list) =>
-		add_face_from_three_vertex_indices(
-			dcel,
-			value_in_list_by_index(v_index_list, 0),
-			value_in_list_by_index(v_index_list, 1),
-			value_in_list_by_index(v_index_list, 2)
-		)
-	;
 
 	// dcel -> he -> dcel
 	const remove_face = (dcel, he) => {
@@ -205,7 +205,7 @@
 		if(he_is_null(he))
 			return dcel;
 		
-		GLOBAL_DISP.push_face_removed_state(vertex_index_list_from_face(dcel, he));
+		GLOBAL_DISP.push_face_removed_state(vertex_list_from_face(dcel, he));
 
 		const he_A = he;
 		const he_B = next_he(dcel, he);
@@ -248,16 +248,16 @@
 		return final_dcel;
 	};
 
-	const find_among_face = (dcel, predicate) =>
+	const find_among_dcel_faces = (dcel, predicate) =>
 	{
-		const find_among_face_rec = (he_list) =>
+		const find_among_dcel_faces_rec = (he_list) =>
 			he_list.length === 0
-				? undefined
+				? new_null_he()
 				: predicate(he_list.slice(-1)[0])
 					? he_list.slice(-1)[0]
-					: find_among_face_rec(he_list.slice(0, -3))
+					: find_among_dcel_faces_rec(he_list.slice(0, -3))
 		;
 
-		return find_among_face_rec(dcel.he_list);
+		return find_among_dcel_faces_rec(dcel.he_list);
 	}
 	;
