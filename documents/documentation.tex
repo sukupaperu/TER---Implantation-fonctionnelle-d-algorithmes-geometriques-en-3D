@@ -40,10 +40,12 @@
 	captionpos=b
 }
 
-%\usepackage{tikz}
-%\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,positioning,fit,matrix,arrows}
+\usepackage{amsmath}
 
 \usepackage[left=2cm, right=2cm, top=2cm]{geometry}
+%\usepackage{multicol}
+%\setlength{\columnseprule}{.1pt}
+
 
 \title{Implantation fonctionnelle d'algorithmes géométriques en 3D}
 \author{Titouan Laurent}
@@ -69,7 +71,7 @@ const vec3 = (x, y, z) =>
 Dans le cas du problème du calcul de l'enveloppe convexe d'un ensemble de $n$ points, on travaille sur un ensemble de prédéfinis. Afin d'éviter toute ambiguïté dans l'identification de points individuels (deux points individuels peuvent partager les mêmes coordonnées spatiales), lesdits points sont stockés dans une liste de taille $n$, accessible en tant que variable globale du programme. Dès lors, un point est identifiable et accessible via son propre indice dans ladite liste.
 \\
 
-\subsection{Manipulation et stockage de l'enveloppe convexe}
+\subsection{Stockage et manipulation de l'enveloppe convexe en mémoire}
 La structure en liste de demi-arêtes orientées (doubly connected edge list, abrégé DCEL) est parmi les plus communes qu'il soit dès lors que l'on souhaite modéliser un maillage topologique.\\\\
 Ici on implante une version plus limitée de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui est sans effet sur les capacités du programme final.
 
@@ -81,17 +83,16 @@ Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données
 			\left\{
 				\begin{array}{ll}
 					index = -1		& \mbox{si la demi-arête est nulle} \\
-					index \geq 0 	& \mbox{sinon.}
+					index \geq 0 	& \mbox{sinon}
 				\end{array}
 			\right.
 		\]
-	\item $next \in \mathbf{N}$, l'identifiant de la demi-arête suivante.
 	\item $opposite \in \mathbf{Z}$, l'identifiant de la demi-arête opposée, avec :
 		\[
 			\left\{
 				\begin{array}{ll}
 					opposite = -1 		& \mbox{si la demi-arête n'a pas d'opposé (boundary)} \\
-					opposite \geq 0 	& \mbox{sinon.}
+					opposite \geq 0 	& \mbox{sinon}
 				\end{array}
 			\right.
 		\]
@@ -106,80 +107,129 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 \end{itemize}
 
 \subsubsection{Exemple simple en 2D}
-Considérons le maillage suivant :
-\[
-	\entrymodifiers={+[o][F]}
-	\renewcommand{\labelstyle}{\textstyle}
-	\xymatrix@=4em @L=.25ex{
-		{}
-		\ar @^{-} [d]
-		\ar @^{-} [dr]
-		& {}
-		\ar @^{-} [l]
-		\\ {}
-		\ar @^{-} [r]
-		& {}
-		\ar @^{-} [u]
-	}
-\]
 
-La structure $dcel$ associée est alors la suivante :
-\[
-	\entrymodifiers={+[o][F]}
-	\renewcommand{\labelstyle}{\textstyle}
-	\xymatrix@=4em @L=.25ex{
-		{\color{red}0}
-		\ar @<.25ex> @^{->} [d] |{\color{blue}0}
-		\ar @<.25ex> @^{->} [dr] ^{\color{blue}4}
-		& {\color{red}1}
-		\ar @<.25ex> @^{->} [l] |{\color{blue}3}
-		\\ {\color{red}2}
-		\ar @<.25ex> @^{->} [r] |{\color{blue}1}
-		& {\color{red}3}
-		\ar @<.25ex> @^{->} [ul] ^{\color{blue}2}
-		\ar @<.25ex> @^{->} [u] |{\color{blue}5}
-	}
-\]
-\[
-	dcel\textbf{ : }
-	\left\{
-		he\_list\textbf{ : }
-		\begin{array}{l}
-			\begin{tabular}{|c|c|c|c|}
+	\begin{figure}[!h]
+		\[
+	\begin{aligned}[c]
+		\entrymodifiers={+[o][F]}
+		\renewcommand{\labelstyle}{\textstyle}
+		\xymatrix@=4em @L=.25ex{
+			{}
+			\ar @^{-} [d]
+			\ar @^{-} [dr]
+			& {}
+			\ar @^{-} [l]
+			\\ {}
+			\ar @^{-} [r]
+			& {}
+			\ar @^{-} [u]
+		}
+	\end{aligned}
+	\rightarrow
+	\begin{aligned}[c]
+		\entrymodifiers={+[o][F]}
+		\renewcommand{\labelstyle}{\textstyle}
+		\xymatrix@=4em @L=.25ex{
+			{\color{red}0}
+			\ar @<.25ex> @^{->} [d] |{\color{blue}0}
+			\ar @<.25ex> @^{->} [dr] ^{\color{blue}4}
+			& {\color{red}1}
+			\ar @<.25ex> @^{->} [l] |{\color{blue}3}
+			\\ {\color{red}2}
+			\ar @<.25ex> @^{->} [r] |{\color{blue}1}
+			& {\color{red}3}
+			\ar @<.25ex> @^{->} [ul] ^{\color{blue}2}
+			\ar @<.25ex> @^{->} [u] |{\color{blue}5}
+		}
+	\end{aligned}
+		\]
+		\caption{Un maillage simple et un indiçage correspondant possible.}
+		\label{maillage_simple}
+	\end{figure}
+
+	\begin{figure}[!h]
+		\[
+		\begin{aligned}[c]
+			\begin{array}{l}
+				\begin{tabular}{|c|c|c|c|}
+					\hline
+					index & opposite & vertex \\
+					\hline
+					\color{blue}0 & -1 & \color{red}0 \\
+					\hline
+					\color{blue}1 & -1 & \color{red}2 \\
+					\hline
+					\color{blue}2 & \color{blue}4 & \color{red}3 \\
+					\hline
+					\color{blue}3 & -1 & \color{red}1 \\
+					\hline
+					\color{blue}4 & \color{blue}2 & \color{red}0 \\
+					\hline
+					\color{blue}5 & -1 & \color{red}3 \\
+					\hline
+				\end{tabular}\\\\
+				available\_he\_index\textbf{ : }6
+			\end{array}
+		\end{aligned}
+		\begin{aligned}[c]
+			\begin{tabular}{|c|c|}
 				\hline
-				index & next & opposite & vertex \\
+				Indice & Coordonnées \\
 				\hline
-				\color{blue}0 & \color{blue}1 & -1 & \color{red}0 \\
+				\color{red}0 & (0,0) \\
 				\hline
-				\color{blue}1 & \color{blue}2 & -1 & \color{red}2 \\
+				\color{red}1 & (1,0) \\
 				\hline
-				\color{blue}2 & \color{blue}0 & \color{blue}4 & \color{red}3 \\
+				\color{red}2 & (1,1) \\
 				\hline
-				\color{blue}3 & \color{blue}4 & -1 & \color{red}1 \\
+				\color{red}3 & (0,1) \\
 				\hline
-				\color{blue}4 & \color{blue}5 & \color{blue}2 & \color{red}0 \\
-				\hline
-				\color{blue}5 & \color{blue}3 & -1 & \color{red}3 \\
-				\hline
-			\end{tabular}\\
-			available\_he\_index\textbf{ : }6
-		\end{array}
-	\right.
-\]
-\[
-	\textbf{Liste globale des indices : }
-	\begin{tabular}{|c|c|}
-		\hline
-		Indice & Coordonnées \\
-		\hline
-		\color{red}0 & (0,0) \\
-		\hline
-		\color{red}1 & (1,0) \\
-		\hline
-		\color{red}2 & (1,1) \\
-		\hline
-		\color{red}3 & (0,1) \\
-		\hline
-	\end{tabular}
-\]
-\end{document}
+			\end{tabular}
+		\end{aligned}
+		\]
+		\caption{Structure DCEL à gauche et table des sommets à droite.}
+		\label{maillage_simple_struct_associee}
+	\end{figure}
+
+	Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.\\\\
+	Note : si les numéros d'indices choisis pour les demi-arêtes sont plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
+	
+	
+	\subsubsection{Ajout et retrait d'une face dans une $dcel$}
+	Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\\\
+	L'ajout d'une nouvelle face entraine implicitement la création de trois demi-arêtes ($he$) dans la structure. Leur indice est lui calculé aux lignes 3, 4 et 5. De même, l'indice de leur demi-arête opposée respective (si elle existe) est recherché parmi toutes les demi-arêtes de $dcel$ aux lignes 7, 8 et 9.
+	Notez que l'attribut $dcel.available\_he\_index$ est mis à jour dans la structure retournée ligne 29.
+	\begin{lstlisting}
+	const add_face = (dcel, vert_A, vert_B, vert_C) =>
+	{
+		const he_AB_index = dcel.available_he_index;
+		const he_BC_index = dcel.available_he_index + 1;
+		const he_CA_index = dcel.available_he_index + 2;
+		
+		const he_AB_opposite_index = look_up_for_opposite_he_index(dcel, vert_A, vert_B);
+		const he_BC_opposite_index = look_up_for_opposite_he_index(dcel, vert_B, vert_C);
+		const he_CA_opposite_index = look_up_for_opposite_he_index(dcel, vert_C, vert_A);
+		
+		return new_dcel(
+			dcel.he_list.map((current_he) =>
+			{
+				switch(he_index(current_he))
+				{
+					case he_AB_opposite_index:
+						return set_he_opposite(current_he, he_AB_index);
+					case he_BC_opposite_index:
+						return set_he_opposite(current_he, he_BC_index);
+					case he_CA_opposite_index:
+						return set_he_opposite(current_he, he_CA_index);
+				}
+				return current_he;
+			})
+			.concat(new_he(he_AB_index, he_AB_opposite_index, vert_A))
+			.concat(new_he(he_BC_index, he_BC_opposite_index, vert_B))
+			.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C))
+			,
+			dcel.available_he_index + 3
+		);
+	};
+	\end{lstlisting}
+	\end{document}

@@ -58,6 +58,18 @@
 		value_in_list_by_index(oset, 0)
 	;
 
+	const biggest_osubet = (oset) =>
+		is_defined(oset[0])
+		? oset.reduce(
+				first_arg_if_true(
+					(x,y) =>
+						osubset_vertex_list(x).length
+						> osubset_vertex_list(y).length
+				)
+			)
+		: undefined
+	;
+
 // --- Modificateurs ---
 
 	// oset -> osubset -> oset
