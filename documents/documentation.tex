@@ -46,6 +46,8 @@
 %\usepackage{multicol}
 %\setlength{\columnseprule}{.1pt}
 
+\usepackage{graphicx}
+\graphicspath{{./medias/}}
 
 \title{Implantation fonctionnelle d'algorithmes géométriques en 3D}
 \author{Titouan Laurent}
@@ -226,10 +228,14 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 			})
 			.concat(new_he(he_AB_index, he_AB_opposite_index, vert_A))
 			.concat(new_he(he_BC_index, he_BC_opposite_index, vert_B))
-			.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C))
-			,
+			.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C)),
 			dcel.available_he_index + 3
 		);
 	};
 	\end{lstlisting}
-	\end{document}
+	
+\section{Évaluation des performances}
+
+\includegraphics[scale=.5]{perf_extreme.png}
+	
+\end{document}
