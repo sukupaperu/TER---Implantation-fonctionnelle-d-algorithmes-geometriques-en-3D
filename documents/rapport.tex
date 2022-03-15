@@ -1,0 +1,244 @@
+\documentclass[]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{color}
+
+\usepackage{amsmath}
+
+\usepackage[left=1.5cm, right=1.5cm, top=2cm]{geometry}
+\usepackage{multicol, float}
+
+%\usepackage{graphicx}
+%\graphicspath{{./medias/}}
+
+\usepackage{tikz, pgfplots}
+\usepackage[all]{xy}
+\pgfplotsset{compat=1.5}
+
+\title{Implantation fonctionnelle d'algorithmes géométriques en 3D}
+\author{Titouan Laurent}
+\date{}
+
+\begin{document}
+	
+	\maketitle
+	\begin{abstract}
+		\#TODO
+	\end{abstract}
+
+\begin{multicols}{2}
+\section{Introduction}
+	\#TODO
+
+\subsection{État de l'art}
+
+\section{Implémentation}
+
+\subsection{Données d'entrées}
+	Un $vec3$ permet de modéliser aussi bien un point qu'un vecteur dans l'espace 3D. Les composantes sont données dans l'ordre usuel $x$, $y$ et $z$ ($x, y, z \in \mathbf{R}$).\\
+	Dans notre implantation, on considèrera une simple liste ordonnée des $n$ points (représentée par la variable globale $GLOBAL\_V\_LIST$) comme étant les données d'entrée du problème à résoudre.
+
+\subsection{Stockage et manipulation de l'enveloppe convexe en mémoire}
+	La structure en liste de demi-arêtes orientées (doubly connected edge list, abrégé DCEL) est parmi les plus communes qu'il soit dès lors que l'on souhaite modéliser un maillage topologique (source nécessaire ?).\\
+	Ici on implante une version restreinte de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui n'empêche pas au programme d'être fonctionnel comme nous le verrons ensuite.
+
+\subsubsection{Demi-arête — $he$}
+	Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Celles-ci sont les suivantes :
+	\begin{itemize}
+		\item $index \in \mathbf{Z}$, un identifiant unique pour la demi-arête, avec :
+			\[
+				\left\{
+					\begin{array}{ll}
+						index = -1		& \mbox{est une demi-arête nulle} \\
+						index \geq 0 	& \mbox{sinon}
+					\end{array}
+				\right.
+			\]
+		\item $opposite \in \mathbf{Z}$, l'identifiant de la demi-arête opposée, avec :
+			\[
+				\left\{
+					\begin{array}{ll}
+						opposite = -1 		& \text{est une demi-arête du bord} \\
+						opposite \geq 0 	& \text{sinon}
+					\end{array}
+				\right.
+			\]
+		\item $vertex \in \mathbf{N}$, l'indice du sommet incident dont elle est issue.
+	\end{itemize}
+	
+	\subsubsection{Maillage triangulaire — $dcel$}
+	Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle dispose des attributs suivants :
+	\begin{itemize}
+		\item $he\_list$, une liste de $he$.
+		\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
+	\end{itemize}
+
+\subsubsection{Exemple simple en 2D}
+
+	\begin{figure}[H]
+		\[\begin{aligned}[c]
+		\entrymodifiers={+[o][F]}
+		\renewcommand{\labelstyle}{\textstyle}
+		\xymatrix@=4em @L=.25ex{
+			{}
+			\ar @^{-} [d]
+			\ar @^{-} [dr]
+			& {}
+			\ar @^{-} [l]
+			\\ {}
+			\ar @^{-} [r]
+			& {}
+			\ar @^{-} [u]
+		}
+		\end{aligned}\rightarrow\begin{aligned}[c]
+		\xymatrix@=4em @L=.25ex{
+			{\color{red}0}
+			\ar @<.25ex> @^{->} [d] |{\color{blue}0}
+			\ar @<.25ex> @^{->} [dr] ^{\color{blue}4}
+			& {\color{red}1}
+			\ar @<.25ex> @^{->} [l] |{\color{blue}3}
+			\\ {\color{red}2}
+			\ar @<.25ex> @^{->} [r] |{\color{blue}1}
+			& {\color{red}3}
+			\ar @<.25ex> @^{->} [ul] ^{\color{blue}2}
+			\ar @<.25ex> @^{->} [u] |{\color{blue}5}
+		}
+		\end{aligned}\]
+		\caption{Un maillage simple et un indiçage correspondant.}
+		\label{maillage_simple}
+	\end{figure}
+
+	\begin{figure}[H]
+		\[
+		\begin{aligned}[c]
+			\begin{array}{l}
+				\begin{tabular}{|c|c|c|c|}
+					\hline
+					index & opposite & vertex \\
+					\hline
+					\color{blue}0 & -1 & \color{red}0 \\
+					\hline
+					\color{blue}1 & -1 & \color{red}2 \\
+					\hline
+					\color{blue}2 & \color{blue}4 & \color{red}3 \\
+					\hline
+					\color{blue}3 & -1 & \color{red}1 \\
+					\hline
+					\color{blue}4 & \color{blue}2 & \color{red}0 \\
+					\hline
+					\color{blue}5 & -1 & \color{red}3 \\
+					\hline
+				\end{tabular}\\\\
+				available\_he\_index\textbf{ : }6
+			\end{array}
+		\end{aligned}
+		\begin{aligned}[c]
+			\begin{tabular}{|c|c|}
+				\hline
+				Indice & Coordonnées \\
+				\hline
+				\color{red}0 & (0,0) \\
+				\hline
+				\color{red}1 & (1,0) \\
+				\hline
+				\color{red}2 & (1,1) \\
+				\hline
+				\color{red}3 & (0,1) \\
+				\hline
+			\end{tabular}
+		\end{aligned}
+		\]
+		\caption{Structure $dcel$ à gauche et la table des sommets à droite.\\Note : $avaiable\_he\_index$ est un indice disponible pour la prochaine demi-arête qui pourrait être ajoutée à la $dcel$.}
+		\label{maillage_simple_struct_associee}
+	\end{figure}
+
+	Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.\\\\
+	Note : si les numéros d'indices choisis pour les demi-arêtes sont ici plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
+	
+	
+	\subsubsection{Ajout et retrait d'une face dans une $dcel$}
+	Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\\\
+	\#TODO: ajouter un pseudo-code\\\\
+	L'ajout d'une nouvelle face entraine implicitement la création de trois demi-arêtes ($he$) dans la structure. Leur indice est lui calculé aux lignes 3, 4 et 5. De même, l'indice de leur demi-arête opposée respective (si elle existe) est recherché parmi toutes les demi-arêtes de $dcel$ aux lignes 7, 8 et 9.
+	Notez que l'attribut $dcel.available\_he\_index$ est mis à jour dans la structure retournée ligne 29.
+%	\begin{lstlisting}
+%	const add_face = (dcel, vert_A, vert_B, vert_C) =>
+%	{
+%		const he_AB_index = dcel.available_he_index;
+%		const he_BC_index = dcel.available_he_index + 1;
+%		const he_CA_index = dcel.available_he_index + 2;
+%		
+%		const he_AB_opposite_index = look_up_for_opposite_he_index(dcel, vert_A, vert_B);
+%		const he_BC_opposite_index = look_up_for_opposite_he_index(dcel, vert_B, vert_C);
+%		const he_CA_opposite_index = look_up_for_opposite_he_index(dcel, vert_C, vert_A);
+%		
+%		return new_dcel(
+%			dcel.he_list.map((current_he) =>
+%			{
+%				switch(he_index(current_he))
+%				{
+%					case he_AB_opposite_index:
+%						return set_he_opposite(current_he, he_AB_index);
+%					case he_BC_opposite_index:
+%						return set_he_opposite(current_he, he_BC_index);
+%					case he_CA_opposite_index:
+%						return set_he_opposite(current_he, he_CA_index);
+%				}
+%				return current_he;
+%			})
+%			.concat(new_he(he_AB_index, he_AB_opposite_index, vert_A))
+%			.concat(new_he(he_BC_index, he_BC_opposite_index, vert_B))
+%			.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C)),
+%			dcel.available_he_index + 3
+%		);
+%	};
+%	\end{lstlisting}
+
+	\subsection{Stockage et manipulation des sous-ensembles de points associés aux faces}
+	
+
+	
+\section{Évaluation des performances}
+	Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.\\\\
+	À la section \ref{heur_choix_du_point} on s'intéresse à la sélection du prochain sous-ensemble de points non-vide (et donc implicitement d'une face du polygone convexe en cours de construction).
+	Tandis qu'à la section \ref{heur_choix_du_sous_ens} on s'intéresse à la sélection du point parmi ceux du sous-ensemble choisit précédemment.\\\\
+	Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillons de points générés aléatoirement (répartition spatiale aléatoire uniforme).
+	
+	\subsection{Heuristique sur le choix du point}\label{heur_choix_du_point}
+	\begin{figure}[H]\begin{tikzpicture}
+		\begin{axis}[
+			title = {},
+			xlabel = {Nombre de points en entrée},
+			ylabel = {Temps de calcul (ms)},
+			legend entries={Point le plus éloigné,Premier point de la liste},
+			legend style={at={(0,1)},anchor=north west}
+		]
+		\addplot+[blue] table {medias/normal.dat};
+		\addplot table {medias/not_extreme_point.dat};
+		\end{axis}
+		\end{tikzpicture}
+		\caption{La courbe bleue montre ici que la stratégie consistant à prendre le point le plus éloigné du plan courant offre de meilleures performances en temps que celle où l'on prend naïvement le premier point de la liste (courbe rouge).}
+	\end{figure}
+
+	\subsection{Heuristique sur le choix du sous-ensemble}\label{heur_choix_du_sous_ens}
+	\begin{figure}[H]\begin{tikzpicture}
+		\begin{axis}[
+		title = {},
+		xlabel = {Nombre de points en entrée},
+		ylabel = {Temps de calcul (ms)},
+		legend entries={Premier sous-ensemble,Plus petit sous-ensemble,Plus grand sous-ensemble},
+		legend style={at={(0,1)},anchor=north west},
+		]
+		\addplot+[blue] table {medias/normal.dat};
+		\addplot table {medias/smallest_osubset.dat};
+		\addplot table {medias/largest_osubset.dat};
+		\end{axis}\end{tikzpicture}
+		\caption{
+			De manière prévisible choisir le plus petit sous-ensemble à chaque itération nuit aux performances de l'algorithme (courbe rouge). En effet en ne prenant à chaque fois que un plus petit sous-ensemble de $n$ points (avec $n > 0$), on se restreint alors à retirer de l'ensemble total $n$ points au mieux à cette itération.\\
+			Il est intéressant de noter ici que prendre le plus grand sous-ensemble (courbe brune) est plus performant que de choisir le premier de la liste (courbe bleue), mais le gain n'est pas aussi significatif que ce qu'on a montré précédemment.
+		}
+	\end{figure}
+
+\end{multicols}{2}
+\end{document}
