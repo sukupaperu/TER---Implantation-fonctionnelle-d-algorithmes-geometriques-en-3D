@@ -10,9 +10,9 @@ const get_furthest_min_and_max = (vertex_list) =>
 	const min_z = vertex_list.reduce(first_arg_if_true((min, v) => V(min).z < V(v).z));
 	const max_z = vertex_list.reduce(first_arg_if_true((max, v) => V(max).z > V(v).z));
 
-	const diff_x = max_x - min_x;
-	const diff_y = max_y - min_y;
-	const diff_z = max_z - min_z;
+	const diff_x = minus3(max_x, min_x);
+	const diff_y = minus3(max_y, min_y);
+	const diff_z = minus3(max_z, min_z);
 	
 	return diff_x > diff_y
 		? diff_x > diff_z

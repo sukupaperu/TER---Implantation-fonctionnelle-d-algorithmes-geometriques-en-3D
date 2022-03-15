@@ -36,33 +36,7 @@
 </body>
 
 <script src="3d_trigo.js"></script>
-<script type="text/javascript">
-	"use strict";
-	//let GLOBAL_V_LIST = [];
-
-	const GLOBAL_V_LIST = [];
-
-	const print_GLOBAL_V_LIST_constructor = () => {
-		let q="GLOBAL_V_LIST.push(";GLOBAL_V_LIST.forEach((x)=>{q += "vec3("+x.x+','+x.y+','+x.z+")"+',';});q+=");";console.log(q);
-	};
-
-	// ------------- Génération de points aléatoires -------------
-	for (let i = 0; i < 10; i++)
-	{
-		GLOBAL_V_LIST.push(
-			multiply3_1(
-				normalize3(
-					minus3_1(vec3(Math.random(), Math.random(), Math.random()), .5)
-				),
-				Math.cbrt(Math.random())//*0 + 1
-				//Math.random()**1000
-			)
-			//multiply3_1(
-			//minus3_1(vec3(Math.random(), Math.random(), Math.random()), .5),
-			//Math.random()**2)
-		);
-	}
-</script>
+<script src="vertex_list_generation.js"></script>
 <script src="wgl.js"></script>
 <script src="display.js"></script>
 <script src="other_structures.js"></script>
