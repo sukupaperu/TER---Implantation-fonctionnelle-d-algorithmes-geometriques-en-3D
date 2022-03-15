@@ -260,7 +260,5 @@ const quick_hull_3d = (vec3_list) =>
 
 	GLOBAL_DISP.push_convex_hull_state(initial_hull);
 
-	const final_hull = recursive_quick_hull_3d(initial_hull, outside_set);
-
-	return final_hull === undefined ? initial_hull : final_hull;
+	return recursive_quick_hull_3d(initial_hull, outside_set);
 }
