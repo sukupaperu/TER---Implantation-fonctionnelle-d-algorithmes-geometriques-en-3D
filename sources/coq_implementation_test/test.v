@@ -2,7 +2,16 @@ Require Import _3d_trigo List.
 Require Import global_v_list.
 Require Import Arith.
 
-Check 1 :: nil.
+Require Extraction.
+
+Extraction Language Haskell.
+
+Extract Constant float => "Prelude.Float".
+Extract Constant mul => "\x y-> x*y".
+
+Extraction "haskell/test" cross.
+
+(* Check 1 :: nil.
 Print all.
 
 Fixpoint value_in_list_by_index_rec (T: Type) (l: list T) (i: nat) (d: T) (j: nat): T :=
@@ -55,19 +64,4 @@ Eval compute in pair 1 2.
 . *)
 
 Eval compute in min_x.
-Eval compute in max_x.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Eval compute in max_x. *)
