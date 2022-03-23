@@ -5,4 +5,8 @@
 *.vo
 *.log
 *.synctex.gz
+*.hi
+*.o
 *#
+sources/coq_implementation_test/haskell/Main
+sources/coq_implementation_test/haskell/Extracted.hs

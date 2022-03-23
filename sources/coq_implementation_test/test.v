@@ -7,9 +7,10 @@ Require Extraction.
 Extraction Language Haskell.
 
 Extract Constant float => "Prelude.Float".
-Extract Constant mul => "\x y-> x*y".
+Extract Constant mul => "\x y-> x Prelude.* y".
+Extract Constant sub => "\x y-> x Prelude.- y".
 
-Extraction "haskell/test" cross.
+Extraction "haskell/Extracted" cross vec3_x.
 
 (* Check 1 :: nil.
 Print all.

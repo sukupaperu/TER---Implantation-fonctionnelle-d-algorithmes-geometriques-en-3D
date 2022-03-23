@@ -7,22 +7,20 @@ const print_GLOBAL_V_LIST_constructor = () =>
     let q="GLOBAL_V_LIST.push(";GLOBAL_V_LIST.forEach((x)=>{q += "vec3("+x.x+','+x.y+','+x.z+")"+',';});q+=");";console.log(q);
 };
 
-function export_global_v_list_to_coq_file() {
-    const print_to_coq_GLOBAL_V_LIST_constructor = () =>
+function export_global_v_list_to_haskell_file() {
+    const print_to_GLOBAL_V_LIST_constructor = () =>
     {
-        let str = "Require Import _3d_trigo List.\nRequire Export List.\n\n";
-        str += "Definition GLOBAL_V_LIST :=\n";
+        let str = "module VertexList where\nimport Extracted\nglobal_vertex_list=[";
         GLOBAL_V_LIST.forEach(
-            (v) => str += "(Vec3 (" + v.x + ") (" + v.y+") (" + v.z + "))\n\t:: "
+            (v) => str += "(Vec3("+v.x+")("+v.y+")("+v.z+")),"
         );
-        str += "nil\n.";
-        return str;
+        return str.slice(0,-1) + "]\n";
     };
-    const coq_str = print_to_coq_GLOBAL_V_LIST_constructor();
+    const coq_str = print_to_GLOBAL_V_LIST_constructor();
     const data = new Blob([coq_str], {type: "application/text"});
     const download_button_element = document.createElement("a");
     download_button_element.setAttribute("href", window.URL.createObjectURL(data));
-    download_button_element.setAttribute("download","global_v_list.v");
+    download_button_element.setAttribute("download","VertexList.hs");
     download_button_element.click();
 }
 
