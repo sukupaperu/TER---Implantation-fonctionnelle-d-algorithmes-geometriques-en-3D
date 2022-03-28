@@ -5,8 +5,9 @@ if [ "$1" = "clear" ]; then
     echo "Done."
 elif [ "$1" = "build" ]; then
     mkdir -p haskell
-    coqc _3d_trigo.v
-    coqc global_v_list.v
+    coqc trigo_3d.v
+    coqc other_structures.v
+    coqc quickhull_3d.v
     coqc test.v
     echo "Done."
 elif [ "$1" = "build_h" ]; then

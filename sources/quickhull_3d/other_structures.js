@@ -12,13 +12,13 @@
 	;
 
 	// any list -> (any -> bool) -> int
-	const look_up_index_in_list = (list, condition) =>
-		list.length === 0
-			? -1
-			: condition(list[list.length - 1])
-				? list.length - 1
-				: look_up_index_in_list(list.slice(0, -1), condition)
-	;
+	// const look_up_index_in_list = (list, condition) =>
+	// 	list.length === 0
+	// 		? -1
+	// 		: condition(list[list.length - 1])
+	// 			? list.length - 1
+	// 			: look_up_index_in_list(list.slice(0, -1), condition)
+	// ;
 
 
 // ---- Opérations sur les listes (ici volontairement en approche non-fonctionnelles) ----

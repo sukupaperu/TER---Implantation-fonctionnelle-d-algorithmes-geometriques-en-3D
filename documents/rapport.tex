@@ -5,6 +5,7 @@
 \usepackage{color}
 
 \usepackage{amsmath}
+\usepackage{algpseudocode}
 
 \usepackage[left=1.5cm, right=1.5cm, top=2cm]{geometry}
 \usepackage{multicol, float}
@@ -43,7 +44,7 @@
 	La structure en liste de demi-arêtes orientées (doubly connected edge list, abrégé DCEL) est parmi les plus communes qu'il soit dès lors que l'on souhaite modéliser un maillage topologique (source nécessaire ?).\\
 	Ici on implante une version restreinte de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui n'empêche pas au programme d'être fonctionnel comme nous le verrons ensuite.
 
-\subsubsection{Demi-arête — $he$}
+	\subsubsection{Demi-arête — $he$}
 	Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Celles-ci sont les suivantes :
 	\begin{itemize}
 		\item $index \in \mathbf{Z}$, un identifiant unique pour la demi-arête, avec :
@@ -74,7 +75,7 @@
 		\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
 	\end{itemize}
 
-\subsubsection{Exemple simple en 2D}
+	\subsubsection{Exemple simple en 2D}
 
 	\begin{figure}[H]
 		\[\begin{aligned}[c]
@@ -156,10 +157,9 @@
 	Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.\\\\
 	Note : si les numéros d'indices choisis pour les demi-arêtes sont ici plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
 	
-	
 	\subsubsection{Ajout et retrait d'une face dans une $dcel$}
-	Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\\\
-	\#TODO: ajouter un pseudo-code\\\\
+	Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\
+	
 	L'ajout d'une nouvelle face entraine implicitement la création de trois demi-arêtes ($he$) dans la structure. Leur indice est lui calculé aux lignes 3, 4 et 5. De même, l'indice de leur demi-arête opposée respective (si elle existe) est recherché parmi toutes les demi-arêtes de $dcel$ aux lignes 7, 8 et 9.
 	Notez que l'attribut $dcel.available\_he\_index$ est mis à jour dans la structure retournée ligne 29.
 %	\begin{lstlisting}
@@ -195,10 +195,18 @@
 %	};
 %	\end{lstlisting}
 
-	\subsection{Stockage et manipulation des sous-ensembles de points associés aux faces}
+\subsection{Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}
+	\subsubsection{Sous-ensemble de points extérieurs — $osubset$}
+	Un sous-ensemble de points extérieurs (outside subset) est une structure de données à deux champs :
+	\begin{itemize}
+		\item $face\_index \in \mathbf{N}$, l'identifiant unique d'une face.
+		\item $list \in \mathbf{N}$, l'ensemble des points extérieurs à la face $face\_index$, représentés par leur indice dans $GLOBAL\_V\_LIST$.
+	\end{itemize}
+
+	\subsubsection{Ensemble de points extérieurs — $oset$}
+	L'ensemble de points extérieurs (outside set) n'est rien d'autre qu'une liste d'$osubset$, chacune associée à une unique face (et son ensemble de points extérieurs associé).
 	
 
-	
 \section{Évaluation des performances}
 	Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.\\\\
 	À la section \ref{heur_choix_du_point} on s'intéresse à la sélection du prochain sous-ensemble de points non-vide (et donc implicitement d'une face du polygone convexe en cours de construction).
