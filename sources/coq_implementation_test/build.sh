@@ -10,6 +10,9 @@ elif [ "$1" = "build" ]; then
     coqc quickhull_3d.v
     coqc test.v
     echo "Done."
+elif [ "$1" = "test" ]; then
+    coqc test.v
+    echo "Done."
 elif [ "$1" = "build_h" ]; then
     cd haskell
     ghc --make Main.hs

@@ -43,7 +43,6 @@ Definition first_arg_if_true (T: Type) (f: T->T->bool) : T->T->T :=
 Fixpoint reduce_list (A B: Set) (l: list A) (action_on_reduce: A->B->B) (default: B): B :=
   match l with
     | nil => default
-    | a :: b =>
-		action_on_reduce a (reduce_list A B b action_on_reduce default)
+    | a :: b => action_on_reduce a (reduce_list A B b action_on_reduce default)
   end
 .

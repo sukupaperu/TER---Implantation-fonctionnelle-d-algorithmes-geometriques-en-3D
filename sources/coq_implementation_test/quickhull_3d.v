@@ -1,5 +1,7 @@
 Require Import trigo_3d other_structures.
 
+(*Definition globalVertexList := (Vec3 0 0 0) :: nil.*)
+
 Definition V (l: list vec3) (index: nat): vec3 :=
 	value_in_list_by_index vec3 l index (Vec3 0 0 0)
 .
