@@ -10,3 +10,7 @@
 *#
 sources/coq_implementation_test/haskell/Main
 sources/coq_implementation_test/haskell/Extracted.hs
+sources/coq_implementation_test/.CoqMakefile.d
+.gitignore
+sources/coq_implementation_test/makefile
+sources/coq_implementation_test/CoqMakefile.conf

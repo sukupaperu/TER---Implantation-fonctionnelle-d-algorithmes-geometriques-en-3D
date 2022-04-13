@@ -7,20 +7,20 @@ const print_GLOBAL_V_LIST_constructor = () =>
     let q="GLOBAL_V_LIST.push(";GLOBAL_V_LIST.forEach((x)=>{q += "vec3("+x.x+','+x.y+','+x.z+")"+',';});q+=");";console.log(q);
 };
 
-function export_global_v_list_to_haskell_file() {
+function export_global_v_list() {
     const print_to_GLOBAL_V_LIST_constructor = () =>
     {
-        let str = "module VertexList where\nimport Extracted\nglobal_vertex_list=[";
+        let str = "";
         GLOBAL_V_LIST.forEach(
-            (v) => str += "(Vec3("+v.x+")("+v.y+")("+v.z+")),"
+            (v) => str += v.x + " " + v.y + " " + v.z + "\n"
         );
-        return str.slice(0,-1) + "]\n";
+        return str;
     };
-    const coq_str = print_to_GLOBAL_V_LIST_constructor();
-    const data = new Blob([coq_str], {type: "application/text"});
+    const data_str = print_to_GLOBAL_V_LIST_constructor();
+    const data = new Blob([data_str], {type: "application/txt"});
     const download_button_element = document.createElement("a");
     download_button_element.setAttribute("href", window.URL.createObjectURL(data));
-    download_button_element.setAttribute("download","VertexList.hs");
+    download_button_element.setAttribute("download","VertexList.txt");
     download_button_element.click();
 }
 

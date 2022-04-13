@@ -159,7 +159,17 @@
 	
 	\subsubsection{Ajout et retrait d'une face dans une $dcel$}
 	Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\
-	
+	\begin{algorithmic}[1]
+		\State $heAB \gets dcel.available\_he\_index$
+		\State $heBC \gets dcel.available\_he\_index + 1$
+		\State $heCA \gets dcel.available\_he\_index + 2$
+		
+		\State $heABopposite \gets lookUpForOppos(dcel, vert\_A, vert\_B)$
+		\State $heBCopposite \gets lookUpForOppos(dcel, vert\_B, vert\_C)$
+		\State $heCAopposite \gets lookUpForOppos(dcel, vert\_C, vert\_A)$
+		
+		\State \Return dcel.he\_list.map( where he.index = heABopposite then he.opposite <- heAB )
+	\end{algorithmic}
 	L'ajout d'une nouvelle face entraine implicitement la création de trois demi-arêtes ($he$) dans la structure. Leur indice est lui calculé aux lignes 3, 4 et 5. De même, l'indice de leur demi-arête opposée respective (si elle existe) est recherché parmi toutes les demi-arêtes de $dcel$ aux lignes 7, 8 et 9.
 	Notez que l'attribut $dcel.available\_he\_index$ est mis à jour dans la structure retournée ligne 29.
 %	\begin{lstlisting}
