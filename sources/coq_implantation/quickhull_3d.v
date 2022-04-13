@@ -1,4 +1,4 @@
-Require Import trigo_3d other_structures tupple.
+Require Import trigo_3d dcel_structures other_structures tupple.
 
 (* Definition globalVertexList := (Vec3 0 0 0) :: nil. *)
 
@@ -78,11 +78,3 @@ Definition get_initial_hull (const_vec3_list: list vec3) (vertex_list: list nat)
 	(* if vertex_is_above_plane v_d v_a v_b v_c then *)
 	v_d
 .
-
-(* const v_c = vertex_list_1.reduce(
-		first_arg_if_true(
-			(kept_vertex, current_vertex) =>
-				dist_from_3d_segment(kept_vertex, v_a, v_b)
-				> dist_from_3d_segment(current_vertex, v_a, v_b)
-		)
-	); *)
