@@ -14,3 +14,7 @@ sources/coq_implementation_test/.CoqMakefile.d
 .gitignore
 sources/coq_implementation_test/makefile
 sources/coq_implementation_test/CoqMakefile.conf
+sources/coq_implantation/makefile
+sources/coq_implantation/CoqMakefile.conf
+sources/coq_implantation/.CoqMakefile.d
+sources/coq_implantation/haskell/Extracted.hs
