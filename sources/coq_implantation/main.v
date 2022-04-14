@@ -9,12 +9,14 @@ Extract Inductive nat => "Prelude.Int" [ "0" "Prelude.succ" ]
   "(\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))".
 
 Extract Constant float => "Prelude.Float".
+Extract Constant zero => "0.0".
+Extract Constant one => "1.0".
 Extract Constant mul => "(Prelude.*)".
 Extract Constant sub => "(Prelude.-)".
 Extract Constant div => "(Prelude./)".
 Extract Constant add => "(Prelude.+)".
 Extract Constant ltb => "(Prelude.<)".
 Extract Constant opp => "\x -> -x".
-Extract Constant abs => "abs".
+Extract Constant abs1 => "Prelude.abs".
 
-Extraction "haskell/Extracted" get_initial_hull new_ordered_int_list list_length.
+Extraction "haskell/Extracted" getInitialHull newOrderedIntList listLength.

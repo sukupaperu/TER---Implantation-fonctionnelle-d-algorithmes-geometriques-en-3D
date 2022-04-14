@@ -7,19 +7,19 @@ Inductive vec3 :=
 	Vec3 : float -> float -> float -> vec3
 .
 
-Definition vec3_x (v: vec3) : float :=
+Definition vec3x (v: vec3) : float :=
 	match v with
 		Vec3 x _ _ => x
 	end
 .
 
-Definition vec3_y (v: vec3) : float :=
+Definition vec3y (v: vec3) : float :=
 	match v with
 		Vec3 _ y _ => y
 	end
 .
 
-Definition vec3_z (v: vec3) : float :=
+Definition vec3z (v: vec3) : float :=
 	match v with
 		Vec3 _ _ z => z
 	end
@@ -58,22 +58,26 @@ Definition clamp1 (x a b: float) : float :=
 		if ltb b x then b else x
 .
 
-Definition V (l: list vec3) (index: nat): vec3 :=
-	value_in_list_by_index l index (Vec3 0 0 0)
+Definition abs1 (x: float) : float :=
+	if ltb x zero then -x else x
 .
 
-Definition dist_from_3d_segment (const_vec3_list: list vec3) (v_p v_a v_b: nat) : float :=
+Definition V (l: list vec3) (index: nat): vec3 :=
+	valueInListByIndex l index (Vec3 zero zero zero)
+.
+
+Definition distFrom3dSegment (const_vec3_list: list vec3) (v_p v_a v_b: nat) : float :=
 	let p := V const_vec3_list v_p in
 	let a := V const_vec3_list v_a in
 	let b := V const_vec3_list v_b in
 	let pa := minus3 p a in
 	let ba := minus3 b a in
-	let h := clamp1 ((dot3 pa ba) / (dot3 ba ba)) 0 1 in
+	let h := clamp1 ((dot3 pa ba) / (dot3 ba ba)) zero one in
 	let pa_bah := minus3 pa (multiply3_1 ba h) in
 	dot3 pa_bah pa_bah
 .
 
-Definition signed_dist_from_plane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
+Definition signedDistFromPlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
 	let p := V const_vec3_list v_p in
 	let a := V const_vec3_list v_a in
 	let b := V const_vec3_list v_b in
@@ -81,12 +85,12 @@ Definition signed_dist_from_plane (const_vec3_list: list vec3) (v_p v_a v_b v_c:
 	dot3 (minus3 p a) (cross (minus3 b a) (minus3 c a))
 .
 
-Definition absolute_dist_from_plane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
-	abs (signed_dist_from_plane const_vec3_list v_p v_a v_b v_c)
+Definition absoluteDistFromPlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
+	abs1 (signedDistFromPlane const_vec3_list v_p v_a v_b v_c)
 .
 
-Definition vertex_is_above_plane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : bool :=
-	ltb (signed_dist_from_plane const_vec3_list v_p v_a v_b v_c) 0.0
+Definition vertexIsAbovePlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : bool :=
+	ltb (signedDistFromPlane const_vec3_list v_p v_a v_b v_c) zero
 .
 
 Close Scope float_scope.

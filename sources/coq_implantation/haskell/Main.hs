@@ -28,4 +28,4 @@ main = do
     haskelMaybeVecList <- map (parseVertexEntry . words) . lines <$> readFile "haskell/VertexList.txt"
     let globalVertexList = haskelMaybeVecListToCoqVecList haskelMaybeVecList
     -- printCoqVecList globalVertexList
-    print $ get_initial_hull globalVertexList $ new_ordered_int_list $ list_length globalVertexList
+    print $ getInitialHull globalVertexList $ newOrderedIntList $ listLength globalVertexList

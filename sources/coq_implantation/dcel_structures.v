@@ -1,8 +1,4 @@
-Require Import List.
-Require Import Nat Bool.
-(* Inductive tupple (A: Set) (B: Set): Set :=
-| Tupple : A -> B -> tupple A B
-. *)
+Require Import List Nat Bool.
 
 Inductive he : Set :=
     | NullHe : he
