@@ -25,7 +25,7 @@ function export_global_v_list() {
 }
 
 // ------------- Génération de points aléatoires -------------
-for (let i = 0; i < 100; i++)
+for (let i = 0; i < 300; i++)
 {
     GLOBAL_V_LIST.push(
         multiply3_1(

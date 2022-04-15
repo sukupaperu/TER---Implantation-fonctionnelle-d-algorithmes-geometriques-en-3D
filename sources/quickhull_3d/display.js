@@ -152,6 +152,8 @@ class display
     vao_list = [];
     convex_hull_vao_list = [];
     convex_furthest_point_vao_list = [];
+    
+    external_vao = null;
 
     convex_hull_updating_state = 1;
     face_removed_state = 2;
@@ -248,7 +250,6 @@ class display
 
         const defined_or_zero = (x) => Number.isNaN(x) ? 0 : x;
 
-        let gl = this.gl;
         let new_list = new Array(list.length*3);
         for(let i = 0; i < list.length; i++)
         {
@@ -291,6 +292,11 @@ class display
             this.face_added_state,
             this.wgl.new_vao(vertex_index_list, this.vbo_vertices)
         ]);
+    }
+
+    push_external_shape(vertex_index_list)
+    {
+        this.external_vao = this.wgl.new_vao(vertex_index_list, this.vbo_vertices);
     }
 
     push_furthest_point_state(vertex_index)
@@ -457,6 +463,11 @@ class display
             this.all_vertices_vao.draw_points(this.u_color, color_0, this.u_point_size, 2);
 
             //this.repere.draw(this.u_color);
+
+            if(this.external_vao !== null)
+            {
+                this.external_vao.draw_triangles(this.u_color, [1,0,0]);
+            }
 
             gl.bindVertexArray(null);
             gl.useProgram(null);

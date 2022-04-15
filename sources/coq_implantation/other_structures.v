@@ -9,24 +9,17 @@ Fixpoint newOrderedIntList (n: nat): list nat :=
 	end
 .
 
-Fixpoint listLength {A} (l: list A): nat :=
-	match l with
-		| nil => 0
-		| _ :: m => S (listLength m)
-	end
-.
-
-Fixpoint valueInListByIndexRec {A} (l: list A) (index: nat) (default: A) (current_index: nat): A :=
+Fixpoint valueInListByIndexRec {A} (l: list A) (index: nat) (current_index: nat): option A :=
   match l with
-	| nil => default
+	| nil => None
 	| el :: m =>
 		if beq_nat index current_index
-		then el
-		else valueInListByIndexRec m index default (S current_index)
+		then Some el
+		else valueInListByIndexRec m index (S current_index)
   end
 .
-Fixpoint valueInListByIndex {A} (l: list A) (index: nat) (default: A): A :=
-	valueInListByIndexRec l index default 0
+Fixpoint valueInListByIndex {A} (l: list A) (index: nat): option A :=
+	valueInListByIndexRec l index 0
 .
 
 Definition listIsEmpty {A} (l: list A): bool :=
@@ -40,19 +33,42 @@ Definition firstArgIfTrue {T} (f: T->T->bool) : T->T->T :=
 	fun (a b: T) => if (f a b) then a else b
 .
 
-Fixpoint reduceList {A B} (l: list A) (action_on_reduce: A->B->B) (default: B): B :=
-  match l with
-    | nil => default
-    | a :: b => action_on_reduce a (reduceList b action_on_reduce default)
-  end
+Definition firstArgIfTrueOption {T} (f: T->T->option bool) : T->T->option T :=
+	fun (a b: T) =>
+		match f a b with
+		| Some res => Some (if res then a else b)
+		| None => None
+		end
 .
 
-Fixpoint filterList {A} (l: list A) (predicate: A->bool): list A :=
-  match l with
-	| nil => nil
-	| a :: b =>
-	  if predicate a
-	  then a :: (filterList b predicate)
-	  else filterList b predicate
-  end
+Fixpoint reduceList {A B} (l: list A) (action_on_reduce: A->B->B) (init_value: B): B :=
+	match l with
+	| nil => init_value
+	| a :: l' => action_on_reduce a (reduceList l' action_on_reduce init_value)
+	end
+.
+
+Definition reduceListSimple {A} (l: list A) (action_on_reduce: A->A->A): option A :=
+	match hd_error l with
+	| Some head_value => Some (reduceList l action_on_reduce head_value)
+	| None => None
+	end
+.
+
+Fixpoint reduceListOption {A B} (l: list A) (action_on_reduce: A->B->option B) (init_value: B): option B :=
+	match l with
+	| nil => Some init_value
+	| a :: l' =>
+		match reduceListOption l' action_on_reduce init_value with
+		| Some res => action_on_reduce a res
+		| None => None
+		end
+	end
+.
+
+Fixpoint reduceListSimpleOption {A} (l: list A) (action_on_reduce: A->A->option A): option A :=
+	match hd_error l with
+	| Some head_value => reduceListOption l action_on_reduce head_value
+	| None => None
+	end
 .

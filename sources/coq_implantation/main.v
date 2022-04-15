@@ -1,5 +1,6 @@
-Require Import trigo_3d other_structures.
-Require Import quickhull_3d.
+Require Import trigo_3d other_structures get_initial_hull.
+
+Require Import ExtrHaskellBasic ExtrHaskellNatNum.
 
 Require Extraction.
 Extraction Language Haskell.
@@ -19,4 +20,10 @@ Extract Constant ltb => "(Prelude.<)".
 Extract Constant opp => "\x -> -x".
 Extract Constant abs1 => "Prelude.abs".
 
-Extraction "haskell/Extracted" getInitialHull newOrderedIntList listLength.
+(* Optimisations *)
+Extract Constant valueInListByIndex => "(\l x -> Prelude.Just Prelude.$ l Prelude.!! x)".
+Extract Inlined Constant length => "Prelude.length".
+Extract Inlined Constant filter => "Prelude.filter".
+Extract Inlined Constant map => "Prelude.map".
+
+Extraction "haskell/Extracted" getInitialHull newOrderedIntList getVec3InListFunctor.

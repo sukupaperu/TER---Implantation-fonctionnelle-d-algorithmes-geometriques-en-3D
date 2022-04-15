@@ -258,6 +258,10 @@ const quick_hull_3d = (vec3_list) =>
 	// on récupère une enveloppe initiale (tétrahèdre) et un ensemble de points externes à ses faces
 	const [initial_hull, outside_set] = get_initial_hull(vertex_list);
 
+	console.table(initial_hull.he_list)
+
+	// return initial_hull;
+
 	GLOBAL_DISP.push_convex_hull_state(initial_hull);
 
 	return recursive_quick_hull_3d(initial_hull, outside_set);

@@ -1,80 +1,161 @@
-Require Import List Nat Bool.
+Require Import other_structures Nat Bool.
+
+(* Constructeurs et définitions *)
 
 Inductive he : Set :=
-    | NullHe : he
     (* index -> opposite -> vertex *)
     | He : nat -> option nat -> nat -> he
 .
 
-Definition setHeOpposite (h: he) (o: option nat) : he :=
+Definition setHeOpposite (h: he) (o: nat) : he :=
     match h with
-    | NullHe => NullHe
-    | He i _ v => He i o v
+    | He i _ v => He i (Some o) v
     end
 .
 
 Definition setHeToBoundaryHe (h: he) : he :=
-    setHeOpposite h None
+    match h with
+    | He i _ v => He i None v
+    end
 .
 
 Inductive dcel : Set :=
-    | EmptyDcel : dcel
     (* he_list -> available_he_index *)
     | Dcel : list he -> nat -> dcel
 .
 
-Definition heIndex (h: he) : option nat :=
+Definition emptyDcel : dcel :=
+    Dcel nil 0
+.
+
+(* Accesseurs *)
+
+Definition heIndex (h: he) : nat :=
     match h with
-    | NullHe => None
-    | He i _ _ => Some i
+    | He i _ _ => i
     end
 .
 
-Definition nextHeIndex (h: he) : option nat :=
+Definition nextHeIndex (h: he) : nat :=
     match h with
-    | NullHe => None
-    | He i _ _ => Some ((i - (modulo i 3)) + (modulo (i + 1) 3))
+    | He i _ _ => ((i - (modulo i 3)) + (modulo (i + 1) 3))
     end
 .
 
-Definition previousHeIndex (h: he) : option nat :=
+
+Definition previousHeIndex (h: he) : nat :=
     match h with
-    | NullHe => None
-    | He i _ _ => Some ((i - (modulo i 3)) + (modulo (3 + i - 1) 3))
+    | He i _ _ => ((i - (modulo i 3)) + (modulo (3 + i - 1) 3))
     end
 .
 
 Definition oppositeHeIndex (h: he) : option nat :=
     match h with
-    | NullHe => None
     | He _ o _ => o
     end
 .
 
-Definition sourceVertexOfHe (h: he) : option nat :=
+Definition sourceVertexOfHe (h: he) : nat :=
     match h with
-    | NullHe => None
-    | He _ _ v => Some v
+    | He _ _ v => v
     end
 .
 
-(* Definition destinationVertexOfHe (d: dcel) (h: he) : option nat :=
+Definition getHeByHeIndex (d: dcel) (i: nat) : option he :=
     match d with
-    | EmptyDcel => 
+    | Dcel l _ => find (fun h' => i =? heIndex(h')) l
     end
-. *)
+.
 
-(* 
+(* Propriétés *)
 
-	// dcel -> he -> int
-	const destination_vertex_of_he = (dcel, he) =>
-		source_vertex_of_he(next_he(dcel, he))
-	;
+Definition heIsBoundary (h: he) : bool :=
+    match oppositeHeIndex h with
+    | None => true
+    | Some _ => false
+    end
+.
 
-	// dcel -> int -> he
-	const get_he_by_he_index = (dcel, he_index_to_find) =>
-		{
-			const he_found = dcel.he_list.find((he) => he_index(he) === he_index_to_find);
-			return is_defined(he_found) ? he_found : new_null_he();
-		}	
-	; *)
+(* Accesseurs avancés *)
+
+Definition oppositeHe (d: dcel) (h: he) : option he :=
+    match oppositeHeIndex h with
+    | None => None
+    | Some o => getHeByHeIndex d o
+    end
+.
+
+Definition nextHe (d: dcel) (h: he) : option he :=
+    getHeByHeIndex d (nextHeIndex h)
+.
+
+Definition previousHe (d: dcel) (h: he) : option he :=
+    getHeByHeIndex d (previousHeIndex h)
+.
+
+Definition heByFaceIndex (d: dcel) (face_index: nat) : option he :=
+    getHeByHeIndex d (face_index*3)
+.
+
+Definition destinationVertexOfHe (d: dcel) (h: he) : option nat :=
+    match nextHe d h with
+    | None => None
+    | Some h' => Some (sourceVertexOfHe h')
+    end
+.
+
+Definition addFace (d: dcel) (vert_A vert_B vert_C: nat) : dcel :=
+    let ' Dcel he_list available_he_index := d in
+    let he_AB_index := available_he_index in
+	let he_BC_index := available_he_index + 1 in
+	let he_CA_index := available_he_index + 2 in
+    
+    let lookUpForOppositeHeIndex :=
+        fun (src_vert_index dest_vert_index: nat) =>
+            match
+                find
+                (fun (h': he) =>
+                    match destinationVertexOfHe d h' with
+                    | Some destinationVertex =>
+                        (src_vert_index =? sourceVertexOfHe h') && (dest_vert_index =? destinationVertex)
+                    | None => false
+                    end
+                )
+                he_list
+            with
+            | Some h' => Some (heIndex h')
+            | None => None
+            end
+        in
+    
+    let he_AB_opposite_index := lookUpForOppositeHeIndex vert_A vert_B in
+    let he_BC_opposite_index := lookUpForOppositeHeIndex vert_B vert_C in
+    let he_CA_opposite_index := lookUpForOppositeHeIndex vert_C vert_A in
+    
+    let areEqual :=
+        fun (i: nat) (j: option nat) =>
+            match j with
+            | Some j' => i =? j'
+            | None => false
+            end
+        in
+
+    Dcel
+    (
+        (
+            map
+            (fun (h': he) =>
+                let i := heIndex h' in
+                if areEqual i he_AB_opposite_index then setHeOpposite h' he_AB_index
+                else if areEqual i he_BC_opposite_index then setHeOpposite h' he_BC_index
+                else if areEqual i he_CA_opposite_index then setHeOpposite h' he_CA_index
+                else h'
+            )
+            he_list
+        )
+        ++ (He he_AB_index he_AB_opposite_index vert_A) :: nil
+        ++ (He he_BC_index he_BC_opposite_index vert_B) :: nil
+        ++ (He he_CA_index he_CA_opposite_index vert_C) :: nil
+    )
+    (available_he_index + 3)
+.

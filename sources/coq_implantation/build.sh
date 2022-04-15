@@ -9,7 +9,7 @@ elif [ "$1" = "makefile" ]; then
     echo "Done."
 elif [ "$1" = "haskell" ]; then
     cd haskell
-    ghc --make Main.hs
+    ghc -O2 --make Main.hs
     echo "Done."
 else
     echo "Unknown command"

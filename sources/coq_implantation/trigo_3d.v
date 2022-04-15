@@ -62,14 +62,7 @@ Definition abs1 (x: float) : float :=
 	if ltb x zero then -x else x
 .
 
-Definition V (l: list vec3) (index: nat): vec3 :=
-	valueInListByIndex l index (Vec3 zero zero zero)
-.
-
-Definition distFrom3dSegment (const_vec3_list: list vec3) (v_p v_a v_b: nat) : float :=
-	let p := V const_vec3_list v_p in
-	let a := V const_vec3_list v_a in
-	let b := V const_vec3_list v_b in
+Definition distFrom3dSegment (p a b: vec3) : float :=
 	let pa := minus3 p a in
 	let ba := minus3 b a in
 	let h := clamp1 ((dot3 pa ba) / (dot3 ba ba)) zero one in
@@ -77,20 +70,16 @@ Definition distFrom3dSegment (const_vec3_list: list vec3) (v_p v_a v_b: nat) : f
 	dot3 pa_bah pa_bah
 .
 
-Definition signedDistFromPlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
-	let p := V const_vec3_list v_p in
-	let a := V const_vec3_list v_a in
-	let b := V const_vec3_list v_b in
-	let c := V const_vec3_list v_c in
+Definition signedDistFromPlane (p a b c: vec3) : float :=
 	dot3 (minus3 p a) (cross (minus3 b a) (minus3 c a))
 .
 
-Definition absoluteDistFromPlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : float :=
-	abs1 (signedDistFromPlane const_vec3_list v_p v_a v_b v_c)
+Definition absoluteDistFromPlane (p a b c: vec3) : float :=
+	abs1 (signedDistFromPlane p a b c)
 .
 
-Definition vertexIsAbovePlane (const_vec3_list: list vec3) (v_p v_a v_b v_c: nat) : bool :=
-	ltb (signedDistFromPlane const_vec3_list v_p v_a v_b v_c) zero
+Definition vertexIsAbovePlane (p a b c: vec3) : bool :=
+	ltb (signedDistFromPlane p a b c) zero
 .
 
 Close Scope float_scope.
