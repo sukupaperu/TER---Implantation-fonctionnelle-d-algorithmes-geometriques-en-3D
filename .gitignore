@@ -20,3 +20,5 @@ sources/coq_implantation/.CoqMakefile.d
 sources/coq_implantation/haskell/Extracted.hs
 sources/coq_implantation/haskell/Main
 sources/coq_implantation/haskell/Main
+sources/coq_implantation/haskell/FaceList.txt
+sources/viewer/viewer

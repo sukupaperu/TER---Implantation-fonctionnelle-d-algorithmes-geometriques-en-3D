@@ -6,8 +6,7 @@
 	<title>Demo TER</title>
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 	<style>
-		body
-		{
+		body {
 			background-color: black;
 			margin: 0;
 			display: flex;
@@ -16,12 +15,12 @@
 			align-items: center;
 			height: 100vh;
 		}
-		main
-		{
+
+		main {
 			width: 300px;
 		}
-		input#timeline
-		{
+
+		input#timeline {
 			width: calc(100% - 10px);
 			margin: 5px;
 		}
@@ -118,7 +117,12 @@
 
 	GLOBAL_DISP.set_ready();
 	GLOBAL_DISP.new_frame();
-	//GLOBAL_DISP.autoplay(50);
+	GLOBAL_DISP.autoplay(50);
+
+	function exportToFiles() {
+		export_global_v_list();
+		export_quick_result(convex_hull);
+	}
 </script>
 
 </html>
