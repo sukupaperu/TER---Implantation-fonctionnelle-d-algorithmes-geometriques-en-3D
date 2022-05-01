@@ -5,7 +5,6 @@
 \usepackage{color}
 
 \usepackage{amsmath}
-\usepackage{algpseudocode}
 
 \usepackage[left=2.5cm, right=2.5cm, top=2.5cm]{geometry}
 \usepackage{multicol, float}
@@ -25,23 +24,57 @@
 \begin{document}
 
 \maketitle
-
 \section{Introduction}
-\subsection*{Preuve assistée par ordinateur}
+\paragraph{Preuve assistée par ordinateur}
 Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche qui se veut essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.
 
 Cependant, il peut-être fastidieux de chercher à faire une démonstration formelle à la main, d'autant plus qu'en informatique l'écart entre une implantation donnée et sa description formelle représente une limite. Dans le cas des algorithmes géométriques, il y a l'introduction de difficultés supplémentaires, puisque l'on se retrouvera généralement à travailler aussi bien sur des notions topologiques qu'arithmétiques.
 
 À partir de là, les outils outils de preuve automatique se présentent comme une solution viable. Ils permettent de démontrer des propriétés dans une implantation donnée d'un algorithme, et donc d'en prouver la correction. La contrainte étant que l'implantation doit être faite dans un style de programmation fonctionnel. Leur intérêt réside aussi dans le fait qu'on peut en extraire un programme certifié.
 
-\subsection*{Application au calcul de l'enveloppe convexe}
-Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci Quickhull se veut être inspiré de Quicksort en proposant une approche de type diviser pour régner, assurant une complexité en $O(n\log{}n)$.
+\paragraph{Application au calcul de l'enveloppe convexe}
+Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci Quickhull se veut être inspiré de Quicksort en proposant une approche de type diviser pour régner, lui assurant une complexité en $O(n\log{}n)$.
 
-Par le passé, une implantation de Quickhull restreinte aux ensembles de points à 2 dimensions a été proposée et prouvée formellement. Seulement, la généralisation de Quickhull aux ensembles à 3 dimensions et plus, à partir de la version précédente, n'est pas une tâche triviale à cause des contraintes supplémentaires de visibilité (qu'on ne retrouve pas en 2 dimensions). Il faut également ajouter que les implantations en 3 dimensions existantes sont le pour la grande majorité faites dans un style de programmation impérative, et donc pas directement adapté à la preuve automatique.
+Par le passé, une implantation de Quickhull restreinte aux ensembles de points à 2 dimensions a été proposée et prouvée formellement. Seulement, la généralisation de Quickhull aux ensembles à 3 dimensions et plus, à partir de la version précédente, n'est pas une tâche triviale à cause des contraintes supplémentaires de visibilité (qu'on ne retrouve pas en 2 dimensions). Il faut également ajouter que les implantations en 3 dimensions existantes sont le pour la grande majorité faites dans un style de programmation impératif, et donc pas directement adapté à la preuve automatique.
 
+\paragraph{}
+Mon travail de recherche a donc pour objectif d'explorer ce qui est envisageable en terme d'implantation en style de programmation fonctionnel, de preuve mais aussi d'aide à la visualisation de l'algorithme Quickhull en 3 dimensions.
 
-\section{Implantation}
+\section{Choix d'un langage de programmation}
+Pour ce sujet le langage de programmation retenu est celui de Coq. Coq est un assistant à la construction de preuves automatiques, codées avec une syntaxe qui lui est propre, en paradigme fonctionnel.
 
+Seulement, ici il présente au moins quatre limitations importantes :
+\begin{itemize}
+	\item C'est un langage plutôt austère à prendre en main, sa syntaxe est loin d'être évidente et donc il n'est que peu pratique pour développer rapidement et aisément.
+	\item Il ne permet nativement pas de faire du dessin graphique, ce qui serait pourtant très pratique pour vérifier visuellement le bon fonctionnement des programmes développés.
+	\item Il en est de même pour la lecture et l'écriture de fichiers (pour stocker l'enveloppe convexe par exemple).
+	\item Coq n'est pas un environnement dédié à l'exécution de programmes. En effet il n'est que très peu performant en temps et en capacités de calcul (même lorsqu'il s'agit de faire des opérations arithmétiques sur de simples entiers non signés).
+\end{itemize}
+
+\subparagraph{}
+J'ai donc porté mon choix sur le JavaScript, et ce pour les raisons suivantes :
+\begin{itemize}
+	\item Mis à part Coq, je n'ai jamais utilisé de langage purement fonctionnel jusque-là.
+	\item JavaScript est \textbf{multi-paradigme}, et donc il permet nativement de développer dans un style de \textbf{programmation fonctionnel}.
+	\item C'est un langage que je connais particulièrement bien.
+	\item JavaScript est adapté à la lecture/écriture de fichiers.
+	\item JavaScript intègre nativement des outils d'\textbf{affichage graphique} (WebGL et dessin dans un Canvas avec des instructions simples).
+\end{itemize}
+
+\section{Implantation de Quickhull en 2D}
+Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est bien plus évident de déjà comprendre le cas restreint (et donc plus simple) aux ensembles à deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales.
+
+\paragraph{}
+L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant trois étapes successives de construction de l'enveloppe (en rouge).
+
+On identifie ici clairement en vert les sous-ensembles indépendants de point sur lesquels on va récursivement opérer (opération \emph{diviser}). Un sous-problème est ici de ne garder que les points de notre sous-ensemble qui appartiennent à l'enveloppe.
+
+L'enveloppe convexe est alors construite par les opérations de combinaison des données de retour des sous-appels récursifs (il s'agit basiquement d'une liste ordonnée de points appartenant à ladite enveloppe).
+
+\paragraph{Note :}
+Il est important de noter ici que l'opération de division est possible pour la simple et bonne raison que lorsque l'on sélectionne un point extrême, les sous-ensembles de points obtenus sont strictement indépendants (leur union est vide). Ce détail est d'une importance cruciale pour comprendre le passage de la 2D à la 3D comme nous allons le voir.
+
+\section{Implantation de Quickhull en 3D}
 \subsection{Données d'entrées}
 Un $vec3$ permet de modéliser aussi bien un point qu'un vecteur dans l'espace 3D. Les composantes sont données dans l'ordre usuel $x$, $y$ et $z$ (avec $x, y, z \in \mathbf{R}$).\\
 Dans notre implantation, on considèrera une simple liste ordonnée des $n$ points (représentée par la variable globale $GLOBAL\_V\_LIST$) comme étant les données d'entrée du problème à résoudre.
