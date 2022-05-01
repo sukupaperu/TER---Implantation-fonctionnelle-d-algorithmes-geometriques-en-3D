@@ -9,8 +9,8 @@
 \usepackage[left=2.5cm, right=2.5cm, top=2.5cm]{geometry}
 \usepackage{multicol, float}
 
-%\usepackage{graphicx}
-%\graphicspath{{./medias/}}
+\usepackage{graphicx}
+\graphicspath{{./medias/}}
 
 \usepackage{tikz, pgfplots}
 \usepackage[all]{xy}
@@ -18,15 +18,22 @@
 
 \title{Implantation Fonctionnelle \\ d'Algorithmes Géométriques en 3D \\
   \large Quickhull}
-\author{Titouan Laurent}
+\author{Titouan Laurent - Master 1 parcours Image et 3D}
 \date{}
 
 \begin{document}
 
 \maketitle
+
+\includegraphics[width=5cm]{illus/illus0.png}
+\includegraphics[width=5cm]{illus/illus1.png}
+\includegraphics[width=5cm]{illus/illus2.png}
+
+\tableofcontents
+
 \section{Introduction}
 \paragraph{Preuve assistée par ordinateur}
-Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche qui se veut essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.
+Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche qui se veut essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.ggg
 
 Cependant, il peut-être fastidieux de chercher à faire une démonstration formelle à la main, d'autant plus qu'en informatique l'écart entre une implantation donnée et sa description formelle représente une limite. Dans le cas des algorithmes géométriques, il y a l'introduction de difficultés supplémentaires, puisque l'on se retrouvera généralement à travailler aussi bien sur des notions topologiques qu'arithmétiques.
 
@@ -58,32 +65,108 @@ J'ai donc porté mon choix sur le JavaScript, et ce pour les raisons suivantes :
 	\item JavaScript est \textbf{multi-paradigme}, et donc il permet nativement de développer dans un style de \textbf{programmation fonctionnel}.
 	\item C'est un langage que je connais particulièrement bien.
 	\item JavaScript est adapté à la lecture/écriture de fichiers.
-	\item JavaScript intègre nativement des outils d'\textbf{affichage graphique} (WebGL et dessin dans un Canvas avec des instructions simples).
+	\item JavaScript intègre nativement des outils d'\textbf{rendu graphique} (WebGL et dessin dans un Canvas avec des instructions simples).
 \end{itemize}
 
 \section{Implantation de Quickhull en 2D}
 Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est bien plus évident de déjà comprendre le cas restreint (et donc plus simple) aux ensembles à deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales.
 
+\subsection{Principe général}
+
 \paragraph{}
-L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant trois étapes successives de construction de l'enveloppe (en rouge).
+L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" de la technique du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant des étapes successives de la construction de l'enveloppe.
 
-On identifie ici clairement en vert les sous-ensembles indépendants de point sur lesquels on va récursivement opérer (opération \emph{diviser}). Un sous-problème est ici de ne garder que les points de notre sous-ensemble qui appartiennent à l'enveloppe.
+\includegraphics[width=5cm]{qh2d/geogebra-export.png}
+\includegraphics[width=5cm]{qh2d/geogebra-export2.png}
+\includegraphics[width=5cm]{qh2d/geogebra-export3.png}
 
-L'enveloppe convexe est alors construite par les opérations de combinaison des données de retour des sous-appels récursifs (il s'agit basiquement d'une liste ordonnée de points appartenant à ladite enveloppe).
+Considérons que l'on dispose des points suivants. Supposons également qu'on sait que les points $A$ et $B$ (en rouge) appartiennent à l'enveloppe convexe (arête en pointillé). La prochaine étape de l'algorithme est alors de déterminer le point le plus extrême (le plus éloigné) de l'arête $AB$ : on trouve le point $C$ (en vert).
+
+\includegraphics[width=6cm]{qh2d/geogebra-export4.png}
+
+Sachant la nouvelle enveloppe obtenue, on peut alors procéder à la division du problème en deux sous-problèmes (plus petits) : pour chaque arête nouvellement créée (ici $AC$ et $CB$), on forme un sous-ensemble de points (entourés en bleu) en ne gardant que ceux qui sont visibles depuis l'arête en question. Ici $H$ et $G$ ne sont pas visibles (visbilité orientée) ni par $AC$, ni par $CB$, donc ils ne font pas partie de l'enveloppe convexe.
+
+On peut alors récursivement appliquer le même algorithme sur les 2 sous-ensembles générés (entourés en bleu ici) par rapport à leur arête respective ($AC$ et $CB$).
+
+L'enveloppe convexe est alors construite par les opérations de combinaison des données de retour des sous-appels récursifs (il s'agit basiquement d'une liste ordonnée des points appartenant à l'enveloppe convexe).
 
 \paragraph{Note :}
-Il est important de noter ici que l'opération de division est possible pour la simple et bonne raison que lorsque l'on sélectionne un point extrême, les sous-ensembles de points obtenus sont strictement indépendants (leur union est vide). Ce détail est d'une importance cruciale pour comprendre le passage de la 2D à la 3D comme nous allons le voir.
+Il est important de noter qu'un point fort de cet algorithme réside dans le choix du point le plus extrême par rapport à une arête. Avec cette méthode on s'assure d'avoir deux sous-ensembles disjoints de points associés aux nouvelles arêtes, et donc on peut appliquer le même algorithme sur les 2 sous-ensembles.
+
+Si on n'avait pas l'assurance que les sous-ensembles sont disjoints, on ne pourrait tout simplement pas faire l'opération de division, et donc pas de \emph{diviser pour régner}.
+
+\paragraph{}
+La première étape de Quickhull en 2D (et donc des premiers appels récursifs) peut varier en fonction des implantations. Pour ma part j'ai choisi celle qui consiste à prendre les deux points sur un même axe ($x$ ou $y$) qui sont les plus éloignés l'un de l'autre. On obtient une arête dont chacune des extrêmités appartient à l'enveloppe convexe. Il suffit alors de lancer l'algorithme précédent en partant successivement de chacun des (2) côtés de l'arête.
+
+\subsection{Démo visuelle}
 
 \section{Implantation de Quickhull en 3D}
-\subsection{Données d'entrées}
+
+\subsection{Principe et spécificités}
+Au-delà de 2 dimensions, l'algorithme Quickhull est nettement plus complexe à implanter. Déjà, en trois dimensions une enveloppe convexe n'est plus une suite d'arêtes mises bout à bout, mais un maillage surfacique triangulaire. Ce qui va demander de penser à une nouvelle structure de données adaptée.
+
+De plus, il n'est plus possible de faire un algorithme en \emph{diviser pour régner}, et pour le comprendre on va regarder un exemple similaire à celui donné pour Quickhull 2D.
+
+\paragraph{}
+\emph{Pour aider à la lisibilité des points dans l'espace 3D, le triangle $ABC$ est sur le plan de la grille, et les points $D$ à $H$ sont représentés avec leur droite verticale.}
+
+\includegraphics[width=5cm]{qh3d/geogebra-export3.png}
+\includegraphics[width=5cm]{qh3d/geogebra-export4.png}
+\includegraphics[width=5cm]{qh3d/geogebra-export5.png}
+
+Considérons que l'on dispose du triangle $ABC$ : une face de l'enveloppe convexe, et des points $D$ à $H$ comme étant l'ensemble des points non traités. Comme pour Quickhull 2D, on va déterminer le point le plus extrême (le plus éloigné) de la face $ABC$ : on trouve le point $D$ (en vert).
+
+La nouvelle enveloppe est alors obtenue par la construction des trois faces $ABD$, $ACD$, $BCD$. Le prédicat de visibilité nous permet de déterminer que le point $G$ (en gris) n'appartient pas à l'enveloppe convexe car non visible des trois faces.
+
+\paragraph{}
+Tout semble bien se passer, jusqu'à l'étape de la division :
+
+\includegraphics[width=6cm]{qh3d/geogebra-export6.png}
+\includegraphics[width=6cm]{qh3d/geogebra-export7.png}
+
+Sur ces deux vues on ne fait \textbf{que} de déplacer la caméra autour du solide.
+En alignant sur une seule droite successivement les points $A$, $D$ et $C$, puis les points $B$, $D$ et $A$, on peut voir que le point $F$ est visible \textbf{simultanément} par deux des faces nouvellement créées.
+
+Cette particularité nous interdit de faire l'étape de la division pour \emph{diviser pour régner}. On comprend également que contrairement à la version 2D où l'on se contentait de modifier supprimer une arête à la fois pour la subdiviser en de nouvelles sous-arêtes, ici on devra parfois supprimer plusieurs faces (car visibles depuis un point extrême) pour reconstruire un certain nombre de faces supplémentaires (l'exemple donné ici est un cas particulier plutôt simple car le point extrême $D$ ne voit qu'une seule face : le triangle $ABC$).
+
+\subsection{Adaptation de l'algorithme}
+
+Puisque l'on ne peut pas faire de \emph{diviser pour régner}, l'algorithme doit être pensé différemment. Je me suis basé sur le pseudo-code donné dans (citer référence) qui propose une généralisation pour les dimensions supérieures à 2.
+
+\paragraph{}
+La boucle principale de l'algorithme suit ces étapes :
+\begin{itemize}
+	\item On choisit une face parmi les faces de l'enveloppe convexe courante dont le sous-ensembles de points non-traités associé est non-vide.
+	\item On prend le point le plus extrême (le plus éloigné) par rapport à ladite face depuis le sous-ensemble de points associé.
+	\item On supprime \textbf{toutes} les faces visibles de l'enveloppe convexe depuis ce point.
+	\item On reconstruit l'enveloppe convexe en formant des faces (triangles) entre ce point et le bord du trou laissé à l'étape précédente.
+	\item On recalcule le sous-ensemble de points associé à la face courante par rapport à la nouvelle enveloppe obtenue (étape qui est loin d'être triviale). On devrait obtenir un nouveau sous-ensemble de points par face nouvellement ajoutée.
+	\item Ré-itérer jusqu'à ce qu'il n'y ait plus de sous-ensemble non-vide associé à l'une des faces de l'enveloppe convexe.
+\end{itemize}
+
+\paragraph{}
+La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient 4 points), sélectionnés suivant la méthode suivante (ref adapté du site) :
+\begin{itemize}
+	\item On cherche deux points les plus éloignés sur deux axes (parmi $x$, $y$ et $z$) parmi l'ensemble de points.
+	\item Avec l'arête formée des deux points précédent, on cherche un troisième point le plus éloigné de ce segment.
+	\item On dispose maintenant d'une face (un triangle) depuis laquelle on va chercher un quatrième point qui en est le plus éloigné.
+	\item On peut dès lors construire le tétrahèdre formé par ces 4 points.
+	\item On attribue (arbitrairement) à chaque face un sous-ensemble de points qui lui sont visibles.
+\end{itemize}
+
+\paragraph{}
+On se rend compte que cette fois-ci il va nous falloir une structure de données pour représenter les sous-ensembles de points associés aux faces. Celle-ci sera appelée $oset$ pour \emph{outside set} par la suite (et $osubset$ pour \emph{outside subset}).
+
+\subsection{Structures de données}
+\subsubsection{Données d'entrées}
 Un $vec3$ permet de modéliser aussi bien un point qu'un vecteur dans l'espace 3D. Les composantes sont données dans l'ordre usuel $x$, $y$ et $z$ (avec $x, y, z \in \mathbf{R}$).\\
 Dans notre implantation, on considèrera une simple liste ordonnée des $n$ points (représentée par la variable globale $GLOBAL\_V\_LIST$) comme étant les données d'entrée du problème à résoudre.
 
-\subsection{Stockage et manipulation de l'enveloppe convexe en mémoire}
+\subsubsection{Stockage et manipulation de l'enveloppe convexe en mémoire}
 La structure en liste de demi-arêtes orientées (doubly connected edge list, abrégé DCEL) est parmi les plus communes qu'il soit dès lors que l'on souhaite modéliser un maillage topologique.\\
-Ici on implante une version restreinte de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui n'empêche pas au programme d'être fonctionnel comme nous le verrons ensuite.
+Ici on implante une version restreinte de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui correspond à notre besoin.
 
-\subsubsection*{Demi-arête — $he$}
+\paragraph{Demi-arête}
 Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Celles-ci sont les suivantes :
 \begin{itemize}
 	\item $index \in \mathbf{Z}$, un identifiant unique pour la demi-arête, avec :
@@ -107,14 +190,14 @@ Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données
 	\item $vertex \in \mathbf{N}$, l'indice du sommet incident dont elle est issue.
 \end{itemize}
 
-\subsubsection*{Maillage triangulaire — $dcel$}
+\paragraph{Maillage triangulaire}
 Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle dispose des attributs suivants :
 \begin{itemize}
 	\item $he\_list$, une liste de $he$.
 	\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
 \end{itemize}
 
-\subsubsection*{Exemple simple en 2D}
+\paragraph{Exemple simple en 2D} :
 
 \begin{figure}[H]
 	\[\begin{aligned}[c]
@@ -193,77 +276,33 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 	\label{maillage_simple_struct_associee}
 \end{figure}
 
-Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.\\\\
-Note : si les numéros d'indices choisis pour les demi-arêtes sont ici plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
+Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.
 
-\subsubsection{Ajout et retrait d'une face dans une $dcel$}
-% Les opérations de modification d'une $dcel$ sont au nombre de deux (si l'on ne prend pas en compte le constructeur) : l'ajout et le retrait de face.\\
-% \begin{algorithmic}[1]
-% 	\State $heAB \gets dcel.available\_he\_index$
-% 	\State $heBC \gets dcel.available\_he\_index + 1$
-% 	\State $heCA \gets dcel.available\_he\_index + 2$
+\paragraph*{Note :} si les numéros d'indices choisis pour les demi-arêtes sont ici plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
 
-% 	\State $heABopposite \gets lookUpForOppos(dcel, vert\_A, vert\_B)$
-% 	\State $heBCopposite \gets lookUpForOppos(dcel, vert\_B, vert\_C)$
-% 	\State $heCAopposite \gets lookUpForOppos(dcel, vert\_C, vert\_A)$
+\paragraph{Ajout et retrait d'une face dans une $dcel$}
+Il s'agit des deux seules opérations de modification d'une $dcel$.
 
-% 	\State \Return dcel.he\_list.map( where he.index = heABopposite then he.opposite <- heAB )
-% \end{algorithmic}
-% L'ajout d'une nouvelle face entraine implicitement la création de trois demi-arêtes ($he$) dans la structure. Leur indice est lui calculé aux lignes 3, 4 et 5. De même, l'indice de leur demi-arête opposée respective (si elle existe) est recherché parmi toutes les demi-arêtes de $dcel$ aux lignes 7, 8 et 9.
-% Notez que l'attribut $dcel.available\_he\_index$ est mis à jour dans la structure retournée ligne 29.
-
-%	\begin{lstlisting}
-%	const add_face = (dcel, vert_A, vert_B, vert_C) =>
-%	{
-%		const he_AB_index = dcel.available_he_index;
-%		const he_BC_index = dcel.available_he_index + 1;
-%		const he_CA_index = dcel.available_he_index + 2;
-%		
-%		const he_AB_opposite_index = look_up_for_opposite_he_index(dcel, vert_A, vert_B);
-%		const he_BC_opposite_index = look_up_for_opposite_he_index(dcel, vert_B, vert_C);
-%		const he_CA_opposite_index = look_up_for_opposite_he_index(dcel, vert_C, vert_A);
-%		
-%		return new_dcel(
-%			dcel.he_list.map((current_he) =>
-%			{
-%				switch(he_index(current_he))
-%				{
-%					case he_AB_opposite_index:
-%						return set_he_opposite(current_he, he_AB_index);
-%					case he_BC_opposite_index:
-%						return set_he_opposite(current_he, he_BC_index);
-%					case he_CA_opposite_index:
-%						return set_he_opposite(current_he, he_CA_index);
-%				}
-%				return current_he;
-%			})
-%			.concat(new_he(he_AB_index, he_AB_opposite_index, vert_A))
-%			.concat(new_he(he_BC_index, he_BC_opposite_index, vert_B))
-%			.concat(new_he(he_CA_index, he_CA_opposite_index, vert_C)),
-%			dcel.available_he_index + 3
-%		);
-%	};
-%	\end{lstlisting}
-
-\subsection{Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}
-\subsubsection*{Sous-ensemble de points extérieurs — $osubset$}
+\subsubsection{Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}
+\paragraph*{Sous-ensemble de points extérieurs — $osubset$}
 Un sous-ensemble de points extérieurs (outside subset) est une structure de données à deux champs :
 \begin{itemize}
 	\item $face\_index \in \mathbf{N}$, l'identifiant unique d'une face.
 	\item $list \in \mathbf{N}$, l'ensemble des points extérieurs à la face $face\_index$, représentés par leur indice dans $GLOBAL\_V\_LIST$.
 \end{itemize}
 
-\subsubsection*{Ensemble de points extérieurs — $oset$}
+\paragraph*{Ensemble de points extérieurs — $oset$}
 L'ensemble de points extérieurs (outside set) n'est rien d'autre qu'une liste d'$osubset$, chacune associée à une unique face (et son ensemble de points extérieurs associé).
 
+\subsection{Évaluation des performances}
+Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.
 
-\section{Évaluation des performances}
-Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.\\\\
-À la section \ref{heur_choix_du_point} on s'intéresse à la sélection du prochain sous-ensemble de points non-vide (et donc implicitement d'une face du polygone convexe en cours de construction).
-Tandis qu'à la section \ref{heur_choix_du_sous_ens} on s'intéresse à la sélection du point parmi ceux du sous-ensemble choisit précédemment.\\\\
-Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillons de points générés aléatoirement (répartition spatiale aléatoire uniforme).
+Dans la prochaine section on s'intéresse à la sélection du prochain sous-ensemble de points non-vide (et donc implicitement d'une face du polygone convexe en cours de construction).
+Tandis qu'à la section suivante on s'intéresse à la sélection du point parmi ceux du sous-ensemble choisit précédemment.
 
-\subsection*{Heuristique sur le choix du point}\label{heur_choix_du_point}
+Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillons de points générés aléatoirement (répartition spatiale aléatoire et uniforme).
+
+\paragraph{Heuristique sur le choix du point} :
 \begin{figure}[H]\begin{tikzpicture}
 		\begin{axis}[
 				title = {},
@@ -279,7 +318,7 @@ Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillo
 	\caption{La courbe bleue montre ici que la stratégie consistant à prendre le point le plus éloigné du plan courant offre de meilleures performances en temps que celle où l'on prend naïvement le premier point de la liste (courbe rouge).}
 \end{figure}
 
-\subsection*{Heuristique sur le choix du sous-ensemble}\label{heur_choix_du_sous_ens}
+\paragraph{Heuristique sur le choix du sous-ensemble} :
 \begin{figure}[H]\begin{tikzpicture}
 		\begin{axis}[
 				title = {},
@@ -297,5 +336,13 @@ Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillo
 		Il est intéressant de noter ici que prendre le plus grand sous-ensemble (courbe brune) est plus performant que de choisir le premier de la liste (courbe bleue), mais le gain n'est pas aussi significatif que ce qu'on a montré précédemment.
 	}
 \end{figure}
+
+\subsection{Démo visuelle}
+
+\section{Implantation d'une étape de Quickhull 3D en Coq et extraction en Haskell}
+
+\section{Conclusion}
+\subsection{Si c'était à refaire}
+\subsection{Pour continuer}
 
 \end{document}
