@@ -55,18 +55,12 @@ void main()
     fragColor = vec4(u_color, 1.);
 }`;
 
-class display
-{
+class display {
     gl;
     wgl;
 
     timeline_el;
     timeline_value;
-
-    /*mouse = {
-        is_down: false,
-        
-    };*/
 
     vbo_vertices;
     shader_prg;
@@ -77,9 +71,8 @@ class display
     vao_all_vertices = null;
     vao_convex_hull = null;
     vao_list = [];
-    
-    constructor(canvas_el, timeline_el)
-    {
+
+    constructor(canvas_el, timeline_el) {
         this.wgl = new wgl(canvas_el);
         this.gl = this.wgl.get_gl();
 
@@ -99,8 +92,7 @@ class display
         this.u_color = gl.getUniformLocation(this.shader_prg, "u_color");
     }
 
-    init_events()
-    {
+    init_events() {
         this.timeline_el.addEventListener("input", () => {
             this.timeline_value = parseInt(this.timeline_el.value);
             this.new_frame();
@@ -116,34 +108,32 @@ class display
         });*/
     }
 
-    init_vertex_list(list)
-    {
-        let max_x = list.reduce((p,q) => p.x > q.x ? p : q).x;
-        let min_x = list.reduce((p,q) => p.x < q.x ? p : q).x;
+    init_vertex_list(list) {
+        let max_x = list.reduce((p, q) => p.x > q.x ? p : q).x;
+        let min_x = list.reduce((p, q) => p.x < q.x ? p : q).x;
         let diff_x = max_x - min_x;
-        let max_y = list.reduce((p,q) => p.y > q.y ? p : q).y;
-        let min_y = list.reduce((p,q) => p.y < q.y ? p : q).y;
+        let max_y = list.reduce((p, q) => p.y > q.y ? p : q).y;
+        let min_y = list.reduce((p, q) => p.y < q.y ? p : q).y;
         let diff_y = max_y - min_y;
-        let max_z = list.reduce((p,q) => p.z > q.z ? p : q).z;
-        let min_z = list.reduce((p,q) => p.z < q.z ? p : q).z;
+        let max_z = list.reduce((p, q) => p.z > q.z ? p : q).z;
+        let min_z = list.reduce((p, q) => p.z < q.z ? p : q).z;
         let diff_z = max_z - min_z;
 
         let min_coord = Math.max(Math.max(min_x, min_y), min_z);
         let max_coord = Math.max(Math.max(max_x, max_y), max_z);
         let diff = max_coord - min_coord;
-        diff_x = (diff_x/diff)*.5;
-        diff_y = (diff_y/diff)*.5;
-        diff_z = (diff_z/diff)*.5;
+        diff_x = (diff_x / diff) * .5;
+        diff_y = (diff_y / diff) * .5;
+        diff_z = (diff_z / diff) * .5;
 
         const defined_or_zero = (x) => Number.isNaN(x) ? 0 : x;
 
         let gl = this.gl;
-        let new_list = new Array(list.length*3);
-        for(let i = 0; i < list.length; i++)
-        {
-            new_list[i*3] = defined_or_zero((list[i].x - min_x)/diff - diff_x);
-            new_list[i*3 + 1] = defined_or_zero((list[i].y - min_y)/diff - diff_y);
-            new_list[i*3 + 2] = defined_or_zero((list[i].z - min_z)/diff - diff_z);
+        let new_list = new Array(list.length * 3);
+        for (let i = 0; i < list.length; i++) {
+            new_list[i * 3] = defined_or_zero((list[i].x - min_x) / diff - diff_x);
+            new_list[i * 3 + 1] = defined_or_zero((list[i].y - min_y) / diff - diff_y);
+            new_list[i * 3 + 2] = defined_or_zero((list[i].z - min_z) / diff - diff_z);
         }
 
         this.vbo_vertices = this.wgl.init_vbo_position(new_list);
@@ -152,50 +142,42 @@ class display
         this.vao_list = [];
     }
 
-    push_result_indices(list)
-    {
+    push_result_indices(list) {
         this.vao_convex_hull = this.wgl.new_vao(list, this.vbo_vertices);
     }
 
-    push_indices(list)
-    {
+    push_indices(list) {
         this.vao_list.push(this.wgl.new_vao(list, this.vbo_vertices));
     }
 
-    set_ready()
-    {
+    set_ready() {
         this.timeline_el.max = this.vao_list.length + 1;
         this.timeline_el.disabled = false;
     }
 
-    autoplay()
-    {
+    autoplay() {
         this.timeline_el.disabled = true;
         const autoplay_rec = (i) => {
-            if(i <= parseInt(this.timeline_el.max))
-            {
+            if (i <= parseInt(this.timeline_el.max)) {
                 window.setTimeout(() => {
                     this.timeline_el.value = this.timeline_value = i;
                     this.new_frame();
-                    //this.wgl.capture_frame(1, frame" + "i);
+                    // this.wgl.capture_frame(1, "frame" + i);
                     autoplay_rec(i + 1);
                 }, 100);
             }
-            else
-            {
+            else {
                 this.timeline_el.disabled = false;
             }
         }
         autoplay_rec(0);
     }
 
-    new_frame()
-    {
+    new_frame() {
         let gl = this.gl;
 
-        const loop = () =>
-        {
-            const time = performance.now()*.001;
+        const loop = () => {
+            const time = performance.now() * .001;
 
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -203,16 +185,13 @@ class display
             gl.useProgram(this.shader_prg);
             gl.uniform1f(this.u_time, time);
 
-            if(this.timeline_value - 1 < this.vao_list.length)
-            {
+            if (this.timeline_value - 1 < this.vao_list.length) {
                 //for(let i = 0; i < this.vao_list.length; i++)
-                for(let i = Math.min(this.timeline_value, this.vao_list.length - 1); i >= 0; i--)
-                {
+                for (let i = Math.min(this.timeline_value, this.vao_list.length - 1); i >= 0; i--) {
                     //if(i > this.timeline_value) break;
                     const vao = this.vao_list[i];
                     vao.bind();
-                    if(i === this.timeline_value)
-                    {
+                    if (i === this.timeline_value) {
                         gl.uniform3f(this.u_color, 1, 1, 1);
                         gl.uniform1f(this.u_point_size, 6);
                         gl.drawElements(gl.POINTS, vao.nb_tri, gl.UNSIGNED_INT, 0);
@@ -222,8 +201,7 @@ class display
                     gl.drawElements(gl.LINE_LOOP, vao.nb_tri, gl.UNSIGNED_INT, 0);
                 }
             }
-            else
-            {
+            else {
                 this.vao_convex_hull.bind();
                 gl.uniform3f(this.u_color, 1, 1, 1);
                 gl.uniform1f(this.u_point_size, 5);

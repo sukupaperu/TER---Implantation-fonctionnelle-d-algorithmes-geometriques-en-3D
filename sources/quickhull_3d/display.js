@@ -76,8 +76,7 @@ void main()
 
     gl_PointSize = u_point_size;
     gl_Position = pos_out;
-}`//.replace("mat4 rot = rot0*rot1;", "mat4 rot = rot0;")
-;
+}`;
 
 const fs = `#version 300 es
 precision highp float;
@@ -103,25 +102,21 @@ void main()
     
 }`;
 
-function he_for_each_vertices(dcel, he, action)
-{
+function he_for_each_vertices(dcel, he, action) {
     action(
         source_vertex_of_he(he),
         source_vertex_of_he(next_he(dcel, he)),
         source_vertex_of_he(previous_he(dcel, he))
     );
 }
-function he_for_each_faces(dcel, action)
-{
-    for(let i = 0; i < dcel.he_list.length; i += 3)
-    {
-		if(!he_is_null(dcel.he_list[i]))
-        	action(dcel.he_list[i]);
+function he_for_each_faces(dcel, action) {
+    for (let i = 0; i < dcel.he_list.length; i += 3) {
+        if (!he_is_null(dcel.he_list[i]))
+            action(dcel.he_list[i]);
     }
 }
 
-class display
-{
+class display {
     gl;
     wgl;
 
@@ -152,16 +147,15 @@ class display
     vao_list = [];
     convex_hull_vao_list = [];
     convex_furthest_point_vao_list = [];
-    
+
     external_vao = null;
 
     convex_hull_updating_state = 1;
     face_removed_state = 2;
     face_added_state = 3;
     furthest_point_state = 4;
-    
-    constructor(canvas_el, timeline_el)
-    {
+
+    constructor(canvas_el, timeline_el) {
         this.wgl = new wgl(canvas_el);
         this.gl = this.wgl.get_gl();
 
@@ -182,12 +176,11 @@ class display
         this.u_resolution = gl.getUniformLocation(this.shader_prg, "u_resolution");
         this.u_mouse = gl.getUniformLocation(this.shader_prg, "u_mouse");
         this.camera_angle.u_angle_transition = gl.getUniformLocation(this.shader_prg, "u_angle_transition");
-        
+
         this.repere = this.wgl.new_repere(1.2);
     }
 
-    init_events()
-    {
+    init_events() {
         this.timeline_el.addEventListener("input", () => {
             this.timeline_value = parseInt(this.timeline_el.value);
             //this.new_frame();
@@ -196,16 +189,14 @@ class display
         const event_mouse_x = (e) => e.clientX - e.target.offsetLeft;
         const event_mouse_y = (e) => e.clientY - e.target.offsetTop;
         this.gl.canvas.addEventListener("mousedown", (e) => {
-            if(this.mouse.state === 0)
-            {
+            if (this.mouse.state === 0) {
                 this.mouse.state = 1;
                 this.mouse.x_init = this.mouse.x_curr = event_mouse_x(e);
                 this.mouse.y_init = this.mouse.y_curr = event_mouse_y(e);
             }
         });
         const event_leave_up = (ev) => {
-            if(this.mouse.state === 1 || this.mouse.state === 2)
-            {
+            if (this.mouse.state === 1 || this.mouse.state === 2) {
                 this.mouse.state = 0;
                 this.mouse.x_val += this.mouse.x_curr - this.mouse.x_init;
                 this.mouse.x_init = this.mouse.x_curr = 0;
@@ -218,10 +209,9 @@ class display
         this.gl.canvas.addEventListener("mousemove", (e) => {
             const px = e.clientX - e.target.offsetLeft;
             const py = e.clientY - e.target.offsetTop;
-            if(this.mouse.state === 1)
+            if (this.mouse.state === 1)
                 this.mouse.state = 2;
-            else if(this.mouse.state === 2)
-            {
+            else if (this.mouse.state === 2) {
                 this.mouse.x_curr = event_mouse_x(e);
                 this.mouse.y_curr = event_mouse_y(e);
                 this.new_frame();
@@ -229,33 +219,31 @@ class display
         });
     }
 
-    init_vertex_list(list)
-    {
-        let max_x = list.reduce((p,q) => p.x > q.x ? p : q).x;
-        let min_x = list.reduce((p,q) => p.x < q.x ? p : q).x;
+    init_vertex_list(list) {
+        let max_x = list.reduce((p, q) => p.x > q.x ? p : q).x;
+        let min_x = list.reduce((p, q) => p.x < q.x ? p : q).x;
         let diff_x = max_x - min_x;
-        let max_y = list.reduce((p,q) => p.y > q.y ? p : q).y;
-        let min_y = list.reduce((p,q) => p.y < q.y ? p : q).y;
+        let max_y = list.reduce((p, q) => p.y > q.y ? p : q).y;
+        let min_y = list.reduce((p, q) => p.y < q.y ? p : q).y;
         let diff_y = max_y - min_y;
-        let max_z = list.reduce((p,q) => p.z > q.z ? p : q).z;
-        let min_z = list.reduce((p,q) => p.z < q.z ? p : q).z;
+        let max_z = list.reduce((p, q) => p.z > q.z ? p : q).z;
+        let min_z = list.reduce((p, q) => p.z < q.z ? p : q).z;
         let diff_z = max_z - min_z;
 
         let min_coord = Math.max(Math.max(min_x, min_y), min_z);
         let max_coord = Math.max(Math.max(max_x, max_y), max_z);
         let diff = max_coord - min_coord;
-        diff_x = (diff_x/diff)*.5;
-        diff_y = (diff_y/diff)*.5;
-        diff_z = (diff_z/diff)*.5;
+        diff_x = (diff_x / diff) * .5;
+        diff_y = (diff_y / diff) * .5;
+        diff_z = (diff_z / diff) * .5;
 
         const defined_or_zero = (x) => Number.isNaN(x) ? 0 : x;
 
-        let new_list = new Array(list.length*3);
-        for(let i = 0; i < list.length; i++)
-        {
-            new_list[i*3] = defined_or_zero((list[i].x - min_x)/diff - diff_x);
-            new_list[i*3 + 1] = defined_or_zero((list[i].y - min_y)/diff - diff_y);
-            new_list[i*3 + 2] = defined_or_zero((list[i].z - min_z)/diff - diff_z);
+        let new_list = new Array(list.length * 3);
+        for (let i = 0; i < list.length; i++) {
+            new_list[i * 3] = defined_or_zero((list[i].x - min_x) / diff - diff_x);
+            new_list[i * 3 + 1] = defined_or_zero((list[i].y - min_y) / diff - diff_y);
+            new_list[i * 3 + 2] = defined_or_zero((list[i].z - min_z) / diff - diff_z);
         }
 
         this.vbo_vertices = this.wgl.init_vbo_position(new_list);
@@ -264,43 +252,38 @@ class display
         this.vao_list = [];
     }
 
-    push_convex_hull_state(dcel)
-    {
+    push_convex_hull_state(dcel) {
         let vertex_index_list = [];
         he_for_each_faces(
             dcel,
-            he => he_for_each_vertices(dcel, he, (x, y, z) => vertex_index_list.push(x,y,z))
+            he => he_for_each_vertices(dcel, he, (x, y, z) => vertex_index_list.push(x, y, z))
         )
-        ;
+            ;
         this.vao_list.push([
             this.convex_hull_updating_state,
             this.wgl.new_vao(vertex_index_list, this.vbo_vertices)
         ]);
     }
 
-    push_face_removed_state(vertex_index_list)
-    {
+    push_face_removed_state(vertex_index_list) {
         this.vao_list.push([
             this.face_removed_state,
             this.wgl.new_vao(vertex_index_list, this.vbo_vertices)
         ]);
     }
 
-    push_face_added_state(vertex_index_list)
-    {
+    push_face_added_state(vertex_index_list) {
         this.vao_list.push([
             this.face_added_state,
             this.wgl.new_vao(vertex_index_list, this.vbo_vertices)
         ]);
     }
 
-    push_external_shape(vertex_index_list)
-    {
+    push_external_shape(vertex_index_list) {
         this.external_vao = this.wgl.new_vao(vertex_index_list, this.vbo_vertices);
     }
 
-    push_furthest_point_state(vertex_index)
-    {
+    push_furthest_point_state(vertex_index) {
         this.vao_list.push([
             this.furthest_point_state,
             this.wgl.new_vao([vertex_index], this.vbo_vertices),
@@ -309,18 +292,15 @@ class display
         ]);
     }
 
-    set_ready()
-    {
+    set_ready() {
         this.timeline_el.max = this.vao_list.length + 1;
         this.timeline_el.disabled = false;
 
-        let saved_pos = [0,1];
-        for(let i = 0; i < this.vao_list.length; i++)
-        {
+        let saved_pos = [0, 1];
+        for (let i = 0; i < this.vao_list.length; i++) {
             const [current_state, current_vao, current_angle, current_pos] = this.vao_list[i];
 
-            switch(current_state)
-            {
+            switch (current_state) {
                 case this.convex_hull_updating_state:
                     this.convex_hull_vao_list.push(current_vao);
                     this.convex_furthest_point_vao_list.push(
@@ -344,85 +324,77 @@ class display
                     break;
             }
 
-            const angle_diff = (a, b) => 
-                Math.atan2(a[0]*b[1] - a[1]*b[0], a[0]*b[0] + a[1]*b[1]);
-            
+            const angle_diff = (a, b) =>
+                Math.atan2(a[0] * b[1] - a[1] * b[0], a[0] * b[0] + a[1] * b[1]);
+
             const get_last = (l) => l[l.length - 1];
 
-            if(current_state === this.furthest_point_state)
-            {
+            if (current_state === this.furthest_point_state) {
                 let last_angle = get_last(this.camera_angle.value_list);
                 this.camera_angle.value_list.push([
                     (is_defined(last_angle) ? last_angle[1] : 0),
                     (is_defined(last_angle) ? last_angle[1] : 0)
-                        - angle_diff(saved_pos, current_pos)
+                    - angle_diff(saved_pos, current_pos)
                 ]);
                 saved_pos = current_pos;
             }
-            else
-            {
+            else {
                 let last_angle = get_last(this.camera_angle.value_list);
                 this.camera_angle.value_list.push(
-                    is_defined(last_angle) ? last_angle : [0,0]
+                    is_defined(last_angle) ? last_angle : [0, 0]
                 );
             }
         }
 
     }
 
-    autoplay(autoplay_speed)
-    {
+    autoplay(autoplay_speed) {
         this.timeline_el.disabled = true;
         const autoplay_rec = (i) => {
-            if(i <= parseInt(this.timeline_el.max))
-            {
+            if (i <= parseInt(this.timeline_el.max)) {
                 window.setTimeout(() => {
                     this.timeline_el.value = this.timeline_value = i;
                     autoplay_rec(i + 1);
                 }, autoplay_speed);
             }
-            else
-            {
+            else {
                 this.timeline_el.disabled = false;
             }
         }
         autoplay_rec(0);
     }
 
-    new_frame()
-    {
+    new_frame() {
         const gl = this.gl;
-        const color_0 = [1,1,1];
-        const color_1 = [201/255, 49/255, 89/255];
-        const color_2 = [89/255, 201/255, 49/255];
-        const color_3 = [49/255, 89/255, 201/255];
-        const loop = () =>
-        {
-            const time = performance.now()*.001;
+        const color_0 = [1, 1, 1];
+        const color_1 = [201 / 255, 49 / 255, 89 / 255];
+        const color_2 = [89 / 255, 201 / 255, 49 / 255];
+        const color_3 = [49 / 255, 89 / 255, 201 / 255];
+        const loop = () => {
+            const time = performance.now() * .001;
 
             gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             gl.useProgram(this.shader_prg);
             gl.uniform1f(this.u_time, time);
-            gl.uniform2f(this.u_resolution, 
+            gl.uniform2f(this.u_resolution,
                 gl.canvas.width,
                 gl.canvas.height
             );
-            gl.uniform2f(this.u_mouse, 
+            gl.uniform2f(this.u_mouse,
                 (this.mouse.x_val + this.mouse.x_curr - this.mouse.x_init),
                 (this.mouse.y_val + this.mouse.y_curr - this.mouse.y_init)
             );
 
             const current_i = clamp1(this.timeline_value, 0, this.vao_list.length - 1);
-            
-            if(
+
+            if (
                 current_i - 1 < 0
                 ||
-                    this.camera_angle.value_list[current_i - 1][1]
-                    !== this.camera_angle.value_list[current_i][1]
-            )
-            {
+                this.camera_angle.value_list[current_i - 1][1]
+                !== this.camera_angle.value_list[current_i][1]
+            ) {
                 this.camera_angle.time = time;
             }
             gl.uniform3f(
@@ -433,8 +405,7 @@ class display
             );
 
             const [current_state, current_vao] = this.vao_list[current_i];
-            switch(current_state)
-            {
+            switch (current_state) {
                 case this.face_removed_state:
                     current_vao.draw_triangles(this.u_color, color_1);
                     current_vao.draw_points(this.u_color, color_1, this.u_point_size, 8);
@@ -446,16 +417,14 @@ class display
                     current_vao.draw_triangle_border(this.u_color, color_0);
                     break;
             }
-            
+
             const furthest_point_vao = this.convex_furthest_point_vao_list[current_i];
-            if(is_defined(furthest_point_vao))
-            {
+            if (is_defined(furthest_point_vao)) {
                 furthest_point_vao.draw_points(this.u_color, color_2, this.u_point_size, 8);
             }
 
             const convex_hull_vao = this.convex_hull_vao_list[current_i];
-            if(is_defined(convex_hull_vao))
-            {
+            if (is_defined(convex_hull_vao)) {
                 convex_hull_vao.draw_triangles(this.u_color, color_3);
                 convex_hull_vao.draw_points(this.u_color, color_0, this.u_point_size, 4);
             }
@@ -464,9 +433,8 @@ class display
 
             //this.repere.draw(this.u_color);
 
-            if(this.external_vao !== null)
-            {
-                this.external_vao.draw_triangles(this.u_color, [1,0,0]);
+            if (this.external_vao !== null) {
+                this.external_vao.draw_triangles(this.u_color, [1, 0, 0]);
             }
 
             gl.bindVertexArray(null);

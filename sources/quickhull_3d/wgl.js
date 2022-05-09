@@ -1,24 +1,20 @@
 "use strict";
 
-class wgl
-{
+class wgl {
 
     gl;
 
-    constructor(canvas_el)
-    {
+    constructor(canvas_el) {
         this.init_wgl(canvas_el);
     }
 
-    get_gl()
-    {
+    get_gl() {
         return this.gl;
     }
 
-    init_wgl(c)
-    {
+    init_wgl(c) {
         const gl = c.getContext("webgl2", { preserveDrawingBuffer: true });
-        if(!gl) alert("WebGL n'est pas compatible avec ce navigateur.");
+        if (!gl) alert("WebGL n'est pas compatible avec ce navigateur.");
         gl.clearColor(.025, .025, .025, 1.);
         gl.enable(gl.DEPTH_TEST);
         //gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -27,19 +23,17 @@ class wgl
         this.gl = gl;
     }
 
-    canvas_size()
-    {
+    canvas_size() {
         return this.gl.canvas.width;
     };
 
-    prepare_shader(type, src, info)
-    {
+    prepare_shader(type, src, info) {
         const gl = this.get_gl();
         let shader = gl.createShader(type);
         gl.shaderSource(shader, src);
         gl.compileShader(shader);
         gl.flush();
-        if(gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+        if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
         console.error(info, "non compilé.");
         console.error(gl.getShaderInfoLog(shader))
         console.log(src);
@@ -47,8 +41,7 @@ class wgl
         return null;
     }
 
-    init_shader_program(vs_src, fs_src)
-    {
+    init_shader_program(vs_src, fs_src) {
         const gl = this.get_gl();
         let vs = this.prepare_shader(gl.VERTEX_SHADER, vs_src, "Vertex Shader");
         let fs = this.prepare_shader(gl.FRAGMENT_SHADER, fs_src, "Fragment Shader");
@@ -63,19 +56,17 @@ class wgl
         return null;
     }
 
-    init_vbo_position(list)
-    {
+    init_vbo_position(list) {
         let vbo_vertices = this.gl.createBuffer();
 
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo_vertices); 
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vbo_vertices);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(list), this.gl.STATIC_DRAW);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
         return vbo_vertices;
     }
 
-    new_vao(index_list, vbo_vertices)
-    {
+    new_vao(index_list, vbo_vertices) {
         const gl = this.get_gl();
 
         let vbo_indices = gl.createBuffer();
@@ -100,18 +91,18 @@ class wgl
             bind: () => {
                 gl.bindVertexArray(vao);
             },
-            draw_points: (u_color, [r,g,b], u_point_size, pt_sz) => {
+            draw_points: (u_color, [r, g, b], u_point_size, pt_sz) => {
                 gl.bindVertexArray(vao);
                 gl.uniform3f(u_color, r, g, b);
                 gl.uniform1f(u_point_size, pt_sz);
                 gl.drawElements(gl.POINTS, nb_tri, gl.UNSIGNED_INT, 0);
             },
-            draw_triangles: (u_color, [r,g,b]) => {
+            draw_triangles: (u_color, [r, g, b]) => {
                 gl.bindVertexArray(vao);
                 gl.uniform3f(u_color, r, g, b);
                 gl.drawElements(gl.TRIANGLES, nb_tri, gl.UNSIGNED_INT, 0);
             },
-            draw_triangle_border: (u_color, [r,g,b]) => {
+            draw_triangle_border: (u_color, [r, g, b]) => {
                 gl.bindVertexArray(vao);
                 gl.uniform3f(u_color, r, g, b);
                 gl.drawElements(gl.LINE_LOOP, nb_tri, gl.UNSIGNED_INT, 0);
@@ -119,8 +110,7 @@ class wgl
         };
     }
 
-    new_repere(size)
-    {
+    new_repere(size) {
         const gl = this.get_gl();
 
         let vbo_vertices = this.init_vbo_position([
@@ -153,19 +143,19 @@ class wgl
                 gl.uniform3f(u_color, 1, .5, .5);
                 gl.drawElements(gl.LINES, 2, gl.UNSIGNED_INT, 0);
                 gl.uniform3f(u_color, .5, 1, .5);
-                gl.drawElements(gl.LINES, 2, gl.UNSIGNED_INT, 4*2);
+                gl.drawElements(gl.LINES, 2, gl.UNSIGNED_INT, 4 * 2);
                 gl.uniform3f(u_color, .5, .5, 1);
-                gl.drawElements(gl.LINES, 2, gl.UNSIGNED_INT, 4*4);
+                gl.drawElements(gl.LINES, 2, gl.UNSIGNED_INT, 4 * 4);
             }
         };
     }
 
     capture_frame(quality, title) {
-		let imgData = this.gl.canvas.toDataURL('image/png', quality);
-		let a = document.createElement("a");
-		a.setAttribute("href", imgData);
-		a.setAttribute("download", title + ".png");
-		a.click();
-	}
+        let imgData = this.gl.canvas.toDataURL('image/png', quality);
+        let a = document.createElement("a");
+        a.setAttribute("href", imgData);
+        a.setAttribute("download", title + ".png");
+        a.click();
+    }
 
 }

@@ -1,37 +1,43 @@
 \babel@toc {french}{}
-\contentsline {section}{\numberline {1}Introduction}{2}%
-\contentsline {paragraph}{Preuve assistée par ordinateur}{2}%
-\contentsline {paragraph}{Application au calcul de l'enveloppe convexe}{2}%
-\contentsline {paragraph}{}{2}%
-\contentsline {section}{\numberline {2}Choix d'un langage de programmation}{2}%
-\contentsline {subparagraph}{}{2}%
-\contentsline {section}{\numberline {3}Implantation de Quickhull en 2D}{3}%
-\contentsline {subsection}{\numberline {3.1}Principe général}{3}%
+\contentsline {section}{\numberline {1}Introduction}{3}%
+\contentsline {paragraph}{Preuve assistée par ordinateur}{3}%
+\contentsline {paragraph}{Application au calcul de l'enveloppe convexe}{3}%
 \contentsline {paragraph}{}{3}%
-\contentsline {paragraph}{Note :}{3}%
+\contentsline {section}{\numberline {2}Choix d'un langage de programmation}{3}%
+\contentsline {subparagraph}{}{3}%
+\contentsline {section}{\numberline {3}Implantation de Quickhull en 2D en JavaScript}{4}%
+\contentsline {subsection}{\numberline {3.1}Principe général}{4}%
 \contentsline {paragraph}{}{4}%
-\contentsline {subsection}{\numberline {3.2}Démo visuelle}{4}%
-\contentsline {section}{\numberline {4}Implantation de Quickhull en 3D}{4}%
-\contentsline {subsection}{\numberline {4.1}Principe et spécificités}{4}%
-\contentsline {paragraph}{}{4}%
-\contentsline {paragraph}{}{4}%
-\contentsline {subsection}{\numberline {4.2}Adaptation de l'algorithme}{5}%
+\contentsline {paragraph}{Note :}{4}%
 \contentsline {paragraph}{}{5}%
-\contentsline {paragraph}{}{5}%
-\contentsline {paragraph}{}{5}%
-\contentsline {subsection}{\numberline {4.3}Structures de données}{5}%
-\contentsline {subsubsection}{\numberline {4.3.1}Données d'entrées}{5}%
-\contentsline {subsubsection}{\numberline {4.3.2}Stockage et manipulation de l'enveloppe convexe en mémoire}{6}%
-\contentsline {paragraph}{Demi-arête}{6}%
-\contentsline {paragraph}{Maillage triangulaire}{6}%
-\contentsline {paragraph}{Exemple simple en 2D}{6}%
-\contentsline {paragraph}{Ajout et retrait d'une face dans une $dcel$}{7}%
-\contentsline {subsubsection}{\numberline {4.3.3}Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}{7}%
-\contentsline {subsection}{\numberline {4.4}Évaluation des performances}{7}%
-\contentsline {paragraph}{Heuristique sur le choix du point}{7}%
-\contentsline {paragraph}{Heuristique sur le choix du sous-ensemble}{8}%
-\contentsline {subsection}{\numberline {4.5}Démo visuelle}{8}%
-\contentsline {section}{\numberline {5}Implantation d'une étape de Quickhull 3D en Coq et extraction en Haskell}{8}%
-\contentsline {section}{\numberline {6}Conclusion}{8}%
-\contentsline {subsection}{\numberline {6.1}Si c'était à refaire}{8}%
-\contentsline {subsection}{\numberline {6.2}Pour continuer}{8}%
+\contentsline {subsection}{\numberline {3.2}Structures de données}{5}%
+\contentsline {subsection}{\numberline {3.3}Implantation et démo visuelle}{5}%
+\contentsline {section}{\numberline {4}Implantation de Quickhull en 3D en JavaScript}{6}%
+\contentsline {subsection}{\numberline {4.1}Principe et spécificités}{6}%
+\contentsline {paragraph}{}{6}%
+\contentsline {paragraph}{}{6}%
+\contentsline {subsection}{\numberline {4.2}Adaptation de l'algorithme}{7}%
+\contentsline {paragraph}{}{7}%
+\contentsline {paragraph}{}{7}%
+\contentsline {paragraph}{}{8}%
+\contentsline {subsection}{\numberline {4.3}Structures de données}{8}%
+\contentsline {subsubsection}{\numberline {4.3.1}Données d'entrées}{8}%
+\contentsline {subsubsection}{\numberline {4.3.2}Stockage et manipulation de l'enveloppe convexe en mémoire}{8}%
+\contentsline {paragraph}{Demi-arête}{8}%
+\contentsline {paragraph}{Maillage triangulaire}{8}%
+\contentsline {paragraph}{Exemple simple en 2D}{8}%
+\contentsline {paragraph}{Ajout et retrait d'une face dans une $dcel$}{9}%
+\contentsline {subsubsection}{\numberline {4.3.3}Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}{9}%
+\contentsline {subsection}{\numberline {4.4}Évaluation des performances}{9}%
+\contentsline {paragraph}{Heuristique sur le choix du point}{9}%
+\contentsline {paragraph}{Heuristique sur le choix du sous-ensemble}{10}%
+\contentsline {subsection}{\numberline {4.5}Démo visuelle}{10}%
+\contentsline {section}{\numberline {5}Implantation d'une étape de Quickhull 3D en Coq et extraction en Haskell}{11}%
+\contentsline {subsection}{\numberline {5.1}Variations par rapport à l'implantation JavaScript}{12}%
+\contentsline {subsection}{\numberline {5.2}Extraction du code Coq}{12}%
+\contentsline {subsubsection}{\numberline {5.2.1}Choix du langage d'extraction}{12}%
+\contentsline {subsection}{\numberline {5.3}Optimisations et évaluation des performances}{12}%
+\contentsline {subsection}{\numberline {5.4}Visualisation de la sortie du programme}{12}%
+\contentsline {section}{\numberline {6}Conclusion}{12}%
+\contentsline {subsection}{\numberline {6.1}Si c'était à refaire}{12}%
+\contentsline {subsection}{\numberline {6.2}Pour continuer}{12}%

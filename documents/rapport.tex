@@ -9,7 +9,7 @@
 \usepackage[left=2.5cm, right=2.5cm, top=2.5cm]{geometry}
 \usepackage{multicol, float}
 
-\usepackage{graphicx}
+\usepackage[final]{graphicx}
 \graphicspath{{./medias/}}
 
 \usepackage{tikz, pgfplots}
@@ -29,7 +29,9 @@
 \includegraphics[width=5cm]{illus/illus1.png}
 \includegraphics[width=5cm]{illus/illus2.png}
 
+\newpage
 \tableofcontents
+\newpage
 
 \section{Introduction}
 \paragraph{Preuve assistée par ordinateur}
@@ -59,26 +61,26 @@ Seulement, ici il présente au moins quatre limitations importantes :
 \end{itemize}
 
 \subparagraph{}
-J'ai donc porté mon choix sur le JavaScript, et ce pour les raisons suivantes :
+J'ai donc porté mon choix sur le \textbf{JavaScript}, et ce pour les raisons suivantes :
 \begin{itemize}
 	\item Mis à part Coq, je n'ai jamais utilisé de langage purement fonctionnel jusque-là.
-	\item JavaScript est \textbf{multi-paradigme}, et donc il permet nativement de développer dans un style de \textbf{programmation fonctionnel}.
-	\item C'est un langage que je connais particulièrement bien.
+	\item Hors, JavaScript, un langage que je connais particulièrement bien, est \textbf{multi-paradigme}, et donc il permet nativement de développer dans un style de \textbf{programmation fonctionnel}.
 	\item JavaScript est adapté à la lecture/écriture de fichiers.
-	\item JavaScript intègre nativement des outils d'\textbf{rendu graphique} (WebGL et dessin dans un Canvas avec des instructions simples).
+	\item JavaScript intègre nativement des outils de \textbf{rendu graphique} (WebGL et dessin dans un Canvas avec des instructions simples).
 \end{itemize}
 
-\section{Implantation de Quickhull en 2D}
-Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est bien plus évident de déjà comprendre le cas restreint (et donc plus simple) aux ensembles à deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales.
+\section{Implantation de Quickhull en 2D en JavaScript}
+Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est d'abord bien plus évident de chercher à bien comprendre le cas restreint (et donc plus simple) des ensembles à deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales. Cela passe donc par l'implantation de l'algorithme, qui sera faite dans un style fonctionnel.
 
 \subsection{Principe général}
-
 \paragraph{}
 L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" de la technique du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant des étapes successives de la construction de l'enveloppe.
 
-\includegraphics[width=5cm]{qh2d/geogebra-export.png}
-\includegraphics[width=5cm]{qh2d/geogebra-export2.png}
-\includegraphics[width=5cm]{qh2d/geogebra-export3.png}
+\begin{figure}[H]
+	\includegraphics[width=5cm]{qh2d/geogebra-export.png}
+	\includegraphics[width=5cm]{qh2d/geogebra-export2.png}
+	\includegraphics[width=5cm]{qh2d/geogebra-export3.png}
+\end{figure}
 
 Considérons que l'on dispose des points suivants. Supposons également qu'on sait que les points $A$ et $B$ (en rouge) appartiennent à l'enveloppe convexe (arête en pointillé). La prochaine étape de l'algorithme est alors de déterminer le point le plus extrême (le plus éloigné) de l'arête $AB$ : on trouve le point $C$ (en vert).
 
@@ -98,9 +100,53 @@ Si on n'avait pas l'assurance que les sous-ensembles sont disjoints, on ne pourr
 \paragraph{}
 La première étape de Quickhull en 2D (et donc des premiers appels récursifs) peut varier en fonction des implantations. Pour ma part j'ai choisi celle qui consiste à prendre les deux points sur un même axe ($x$ ou $y$) qui sont les plus éloignés l'un de l'autre. On obtient une arête dont chacune des extrêmités appartient à l'enveloppe convexe. Il suffit alors de lancer l'algorithme précédent en partant successivement de chacun des (2) côtés de l'arête.
 
-\subsection{Démo visuelle}
+\subsection{Structures de données}
+En termes de structures de données il n'y a besoin que de 3 structures principales :
+\begin{itemize}
+	\item Un point constitué de deux coordonnées flottantes $x$ et $y$.
+	\item Une liste (statique) de points dont on va chercher à calculer l'enveloppe convexe.
+	\item Une liste (dynamique) d'entiers non signés pour représenter aussi bien les ensembles de points (indices des points) associés à une arête, que ceux formant l'enveloppe convexe (cette liste est ordonnée dans l'ordre de voisinage des sommets des arêtes).
+\end{itemize}
 
-\section{Implantation de Quickhull en 3D}
+Du fait de la simplicité de ces structures, elles ne représentent pas une contrainte particulière pour une implantation en style fonctionnel.
+
+\subsection{Implantation et démo visuelle}
+En plus d'implanter Quickhull en 2D en JavaScript, j'ai développé un affichage en WebGL qui permet de visualiser les étapes de l'algorithme sur des exemples. La visualisation est un moyen de vérifier mais aussi de mieux comprendre le fonctionnement de ce qui est implanté.
+
+Les captures qui suivent sont celles dudit affichage, avec le code couleur suivant :
+\begin{itemize}
+	\item Petits points blancs : ensemble de points dont on souhaite calculer l'enveloppe convexe.
+	\item Arête rouge : arête déjà parcourue qui appartient (ou qui a appartenu) à l'enveloppe convexe.
+	\item Arête jaune : arête courante sur laquelle la récursion est faite ou arête nouvellement ajoutée à l'enveloppe convexe.
+	\item Arête verte : arête appartenant à l'enveloppe convexe finale calculée.
+\end{itemize}
+
+\begin{figure}[H]
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame0.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame1.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame2.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame3.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame4.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame5.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame6.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame7.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame8.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame9.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame10.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame11.png}
+	\includegraphics[width=2.5cm]{qh2d/demo2d/frame12.png}
+	\caption{Étapes de construction dans l'ordre chronologique de l'enveloppe convexe 2D sur un exemple simple.}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=5cm]{qh2d/demo2d/frame_b0.png}
+	\includegraphics[width=5cm]{qh2d/demo2d/frame_b1.png}
+	\includegraphics[width=5cm]{qh2d/demo2d/frame_b2.png}
+	\caption{Exemple avec un ensemble de points plus grand, sans toutes les étapes intermédiaires.}
+\end{figure}
+
+\section{Implantation de Quickhull en 3D en JavaScript}
+Implanter Quickhull restreint aux ensembles de points en 2D s'est révélé être assez simple, malgré la contrainte de devoir programmer en style fonctionnel. Dans cette section on s'attarde sur la version en 3D, qui représente la partie la plus importante de mon travail de recherche.
 
 \subsection{Principe et spécificités}
 Au-delà de 2 dimensions, l'algorithme Quickhull est nettement plus complexe à implanter. Déjà, en trois dimensions une enveloppe convexe n'est plus une suite d'arêtes mises bout à bout, mais un maillage surfacique triangulaire. Ce qui va demander de penser à une nouvelle structure de données adaptée.
@@ -110,9 +156,11 @@ De plus, il n'est plus possible de faire un algorithme en \emph{diviser pour ré
 \paragraph{}
 \emph{Pour aider à la lisibilité des points dans l'espace 3D, le triangle $ABC$ est sur le plan de la grille, et les points $D$ à $H$ sont représentés avec leur droite verticale.}
 
-\includegraphics[width=5cm]{qh3d/geogebra-export3.png}
-\includegraphics[width=5cm]{qh3d/geogebra-export4.png}
-\includegraphics[width=5cm]{qh3d/geogebra-export5.png}
+\begin{figure}[H]
+	\includegraphics[width=5cm]{qh3d/geogebra-export3.png}
+	\includegraphics[width=5cm]{qh3d/geogebra-export4.png}
+	\includegraphics[width=5cm]{qh3d/geogebra-export5.png}
+\end{figure}
 
 Considérons que l'on dispose du triangle $ABC$ : une face de l'enveloppe convexe, et des points $D$ à $H$ comme étant l'ensemble des points non traités. Comme pour Quickhull 2D, on va déterminer le point le plus extrême (le plus éloigné) de la face $ABC$ : on trouve le point $D$ (en vert).
 
@@ -121,8 +169,10 @@ La nouvelle enveloppe est alors obtenue par la construction des trois faces $ABD
 \paragraph{}
 Tout semble bien se passer, jusqu'à l'étape de la division :
 
-\includegraphics[width=6cm]{qh3d/geogebra-export6.png}
-\includegraphics[width=6cm]{qh3d/geogebra-export7.png}
+\begin{figure}[H]
+	\includegraphics[width=6cm]{qh3d/geogebra-export6.png}
+	\includegraphics[width=6cm]{qh3d/geogebra-export7.png}
+\end{figure}
 
 Sur ces deux vues on ne fait \textbf{que} de déplacer la caméra autour du solide.
 En alignant sur une seule droite successivement les points $A$, $D$ et $C$, puis les points $B$, $D$ et $A$, on peut voir que le point $F$ est visible \textbf{simultanément} par deux des faces nouvellement créées.
@@ -131,7 +181,7 @@ Cette particularité nous interdit de faire l'étape de la division pour \emph{d
 
 \subsection{Adaptation de l'algorithme}
 
-Puisque l'on ne peut pas faire de \emph{diviser pour régner}, l'algorithme doit être pensé différemment. Je me suis basé sur le pseudo-code donné dans (citer référence) qui propose une généralisation pour les dimensions supérieures à 2.
+Puisque l'on ne peut pas faire de \emph{diviser pour régner}, l'algorithme doit être pensé différemment. Je me suis basé sur le pseudo-code donné dans \cite{10.1145/235815.235821} qui propose une généralisation pour les dimensions supérieures à 2.
 
 \paragraph{}
 La boucle principale de l'algorithme suit ces étapes :
@@ -272,7 +322,7 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 			\end{tabular}
 		\end{aligned}
 	\]
-	\caption{Structure $dcel$ à gauche et la table des sommets à droite.\\Note : $avaiable\_he\_index$ est un indice disponible pour la prochaine demi-arête qui pourrait être ajoutée à la $dcel$.}
+	\caption{Structure $dcel$ à gauche et la table des sommets à droite.\\\textbf{Note :} $avaiable\_he\_index$ est l'indice pour la prochaine demi-arête qui sera ajoutée à la $dcel$. On pourrait s'en passer et utiliser à la place l'indice de la dernière $he$ ajoutée à la $dcel$ pour calculer le prochain indice.}
 	\label{maillage_simple_struct_associee}
 \end{figure}
 
@@ -338,11 +388,79 @@ Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillo
 \end{figure}
 
 \subsection{Démo visuelle}
+De la même manière que pour la version 2D, j'ai développé un affichage de l'algorithme de calcul d'enveloppe convexe 3D avec WebGL. Celui-ci s'est avéré absolument indispensable pour débugger le code tout au long du développement. Au final il permet également de visualiser, étape par étape, la construction des différentes faces de l'enveloppe convexe.
+
+\begin{figure}[H]
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_6.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_5.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_4.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_3.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_2.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/init_1.png}
+	\caption{Exemple d'étapes, dans l'ordre chronologique, de la construction de l'enveloppe initiale (tétrahèdre) sur un ensemble de points 3D, face après face.}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_10.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_9.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_8.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_7.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_6.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_5.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_4.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_3.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_2.png}
+	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_1.png}
+	\caption{Exemple d'étapes, dans l'ordre chronologique, de la suppression (en rouge) des faces visibles depuis un point extrême sélectionné (en vert), puis de la reconstructions de nouvelles faces (en vert) depuis le contour du trou engendré avec ledit point.}
+\end{figure}
+
+\begin{figure}[H]
+	\includegraphics[width=4cm]{qh3d/demo3d/main_0.png}
+	\includegraphics[width=4cm]{qh3d/demo3d/main_1.png}
+	\includegraphics[width=4cm]{qh3d/demo3d/main_2.png}
+	\includegraphics[width=4cm]{qh3d/demo3d/main_3.png}
+	\caption{Dernier exemple sur un grand ensemble de points, engendrant un nombre de faces élevé.}
+\end{figure}
 
 \section{Implantation d'une étape de Quickhull 3D en Coq et extraction en Haskell}
+Maintenant que nous avons une implantation de Quickhull 3D qui fonctionne dans un style de programmation fonctionnelle, il serait intéressant d'explorer ce qu'il est possible de faire avec Coq. Pour rappel, l'idée à terme serait d'utiliser Coq pour prouver formellement que notre implantation de Quickhull 3D est correcte.
+
+\subsection{Variations par rapport à l'implantation JavaScript}
+% Une des difficultés liées à Coq est sa documentation qui n'est pas très accessible pour une personne débutante.
+
+\subsection{Extraction du code Coq}
+Dans l'introduction nous avons vu que Coq n'est pas fait pour exporter ou importer des fichiers (autre que des fichiers Coq compilés). Il est aussi très limité en termes de capacités d'exécution de code.
+
+Cependant, l'un de ses modules permet de faire ce que l'on appelle de \textbf{l'extraction de code}. Cette opération consiste à transformer du code source écrit en Coq en un code source écrit dans un autre langage fonctionnel, au choix. Ce que l'on voudrait donc c'est de pouvoir compiler ce code extrait dans un autre langage, pour pouvoir ensuite l'exécuter et se convaincre visuellement de son fonctionnement.
+
+\subsubsection{Choix du langage d'extraction}
+Les langages d'extraction supportés par Coq sont au nombre de quatre. À savoir : OCaml, Haskell, Scheme et JSON (qui n'est pas un langage de programmation, mais de stockage de données). Vient alors la question de choisir le langage d'extraction qui sera utilisé.
+
+\subparagraph*{JSON}
+Ma première idée fut de choisir JSON plutôt qu'un autre. En effet, je n'ai aucune connaissance de ces autres langages, et j'ai d'abord estimé qu'il serait plus long pour moi de me former à l'un de ceux-ci. De plus, le JSON est extrêmement simple à comprendre et à utiliser, il le serait d'autant plus lorsqu'il s'agira de le raccorder à ce que j'avais déjà développé en JavaScript.
+
+Seulement voilà, comme il ne s'agit que de données, l'agencement à l'intérieur d'un fichier JSON est purement arbitraire. Hors l'extraction de Coq vers ce format n'est absolument pas documenté. Il n'y a même aucune assurance pour que le code extrait soit correct.
+
+Faire la rétro-ingénierie des fichiers extraits depuis Coq aurait été d'une part difficile, mais en plus excessivement long à réaliser, sans aucune garantie de succès.
+
+JSON n'est donc plus un choix viable à ce stade.
+
+\subparagraph*{OCaml, Haskell et Scheme}
+Qu'en est-il des autres langages ? Je ne les connais pas, cependant mon choix se portera sur Haskell et ce pour les raisons (subjectives) suivantes :
+\begin{itemize}
+	\item Sa documentation (Hoogle) me parait être la plus accessible.
+	\item Il a une grande communauté de développeurs, donc potentiellement plus de personnes qui rencontrent les mêmes difficultés de débutant que moi.
+\end{itemize}
+
+\subsection{Optimisations et évaluation des performances}
+
+\subsection{Visualisation de la sortie du programme}
 
 \section{Conclusion}
 \subsection{Si c'était à refaire}
 \subsection{Pour continuer}
+
+\bibliographystyle{plain}
+\bibliography{refs}
 
 \end{document}

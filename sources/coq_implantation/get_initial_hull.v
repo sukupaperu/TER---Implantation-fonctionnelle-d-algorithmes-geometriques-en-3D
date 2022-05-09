@@ -105,7 +105,6 @@ Definition getInitialHull (getVec3: nat->option vec3) (vertex_list: list nat) :=
 					Some tetrahedron_hull
 				| _, _, _, _ => None
 				end
-				(* Some (length vertex_list) *)
 			| _ => None
 			end
 		| None => None
