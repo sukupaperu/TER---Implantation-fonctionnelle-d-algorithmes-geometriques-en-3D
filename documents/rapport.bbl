@@ -5,4 +5,16 @@ C.~Bradford Barber, David~P. Dobkin, and Hannu Huhdanpaa.
 \newblock The quickhull algorithm for convex hulls.
 \newblock {\em ACM Trans. Math. Softw.}, 22(4):469–483, dec 1996.
 
+\bibitem{magaud:hal-01066671}
+Nicolas Magaud, Agathe Chollet, and Laurent Fuchs.
+\newblock {Formalizing a Discrete Model of the Continuum in Coq from a Discrete
+  Geometry Perspective}.
+\newblock {\em {Annals of Mathematics and Artificial Intelligence}}, January
+  2015.
+
+\bibitem{smith}
+Jordan Smith.
+\newblock Quickhull 3d.
+\newblock \url{http://algolist.ru/maths/geom/convhull/qhull3d.php}.
+
 \end{thebibliography}

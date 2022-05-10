@@ -6,6 +6,8 @@
 
 \usepackage{amsmath}
 
+\usepackage{url}
+
 \usepackage[left=2.5cm, right=2.5cm, top=2.5cm]{geometry}
 \usepackage{multicol, float}
 
@@ -16,18 +18,33 @@
 \usepackage[all]{xy}
 \pgfplotsset{compat=1.5}
 
-\title{Implantation Fonctionnelle \\ d'Algorithmes Géométriques en 3D \\
-  \large Quickhull}
-\author{Titouan Laurent - Master 1 parcours Image et 3D}
+\title{Implantation Fonctionnelle \\ d'Algorithmes Géométriques en 3D \\[0.5cm]
+  \large Rapport de projet de recherche}
+\author{
+	Titouan Laurent - Master 1 parcours Image et 3D\\
+	Encadrant : Nicolas Magaud
+}
 \date{}
 
 \begin{document}
 
-\maketitle
+\makeatletter
+\begin{titlepage}
+	\begin{center}
+		\includegraphics[width=0.25\linewidth]{logos/icube.jpg}
+		\includegraphics[width=0.3\linewidth]{logos/uds.jpg}\\[2cm]
+		{\huge \bfseries  \@title }\\[1cm]
+		{\large  \@author}\\[2cm]
+		\begin{center}
+			\includegraphics[width=5cm]{illus/illus0.png}
+			\includegraphics[width=5cm]{illus/illus1.png}
+			\includegraphics[width=5cm]{illus/illus2.png}
+		\end{center}
+	\end{center}
+\end{titlepage}
+\makeatother
 
-\includegraphics[width=5cm]{illus/illus0.png}
-\includegraphics[width=5cm]{illus/illus1.png}
-\includegraphics[width=5cm]{illus/illus2.png}
+\newpage
 
 \newpage
 \tableofcontents
@@ -77,14 +94,20 @@ Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m
 L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" de la technique du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant des étapes successives de la construction de l'enveloppe.
 
 \begin{figure}[H]
-	\includegraphics[width=5cm]{qh2d/geogebra-export.png}
-	\includegraphics[width=5cm]{qh2d/geogebra-export2.png}
-	\includegraphics[width=5cm]{qh2d/geogebra-export3.png}
+	\begin{center}
+		\includegraphics[width=5cm]{qh2d/geogebra-export.png}
+		\includegraphics[width=5cm]{qh2d/geogebra-export2.png}
+		\includegraphics[width=5cm]{qh2d/geogebra-export3.png}
+	\end{center}
 \end{figure}
 
 Considérons que l'on dispose des points suivants. Supposons également qu'on sait que les points $A$ et $B$ (en rouge) appartiennent à l'enveloppe convexe (arête en pointillé). La prochaine étape de l'algorithme est alors de déterminer le point le plus extrême (le plus éloigné) de l'arête $AB$ : on trouve le point $C$ (en vert).
 
-\includegraphics[width=6cm]{qh2d/geogebra-export4.png}
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=5cm]{qh2d/geogebra-export4.png}
+	\end{center}
+\end{figure}
 
 Sachant la nouvelle enveloppe obtenue, on peut alors procéder à la division du problème en deux sous-problèmes (plus petits) : pour chaque arête nouvellement créée (ici $AC$ et $CB$), on forme un sous-ensemble de points (entourés en bleu) en ne gardant que ceux qui sont visibles depuis l'arête en question. Ici $H$ et $G$ ne sont pas visibles (visbilité orientée) ni par $AC$, ni par $CB$, donc ils ne font pas partie de l'enveloppe convexe.
 
@@ -122,26 +145,30 @@ Les captures qui suivent sont celles dudit affichage, avec le code couleur suiva
 \end{itemize}
 
 \begin{figure}[H]
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame0.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame1.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame2.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame3.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame4.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame5.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame6.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame7.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame8.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame9.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame10.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame11.png}
-	\includegraphics[width=2.5cm]{qh2d/demo2d/frame12.png}
+	\begin{center}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame0.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame1.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame2.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame3.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame4.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame5.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame6.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame7.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame8.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame9.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame10.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame11.png}
+		\includegraphics[width=2.5cm]{qh2d/demo2d/frame12.png}
+	\end{center}
 	\caption{Étapes de construction dans l'ordre chronologique de l'enveloppe convexe 2D sur un exemple simple.}
 \end{figure}
 
 \begin{figure}[H]
-	\includegraphics[width=5cm]{qh2d/demo2d/frame_b0.png}
-	\includegraphics[width=5cm]{qh2d/demo2d/frame_b1.png}
-	\includegraphics[width=5cm]{qh2d/demo2d/frame_b2.png}
+	\begin{center}
+		\includegraphics[width=5cm]{qh2d/demo2d/frame_b0.png}
+		\includegraphics[width=5cm]{qh2d/demo2d/frame_b1.png}
+		\includegraphics[width=5cm]{qh2d/demo2d/frame_b2.png}
+	\end{center}
 	\caption{Exemple avec un ensemble de points plus grand, sans toutes les étapes intermédiaires.}
 \end{figure}
 
@@ -157,9 +184,11 @@ De plus, il n'est plus possible de faire un algorithme en \emph{diviser pour ré
 \emph{Pour aider à la lisibilité des points dans l'espace 3D, le triangle $ABC$ est sur le plan de la grille, et les points $D$ à $H$ sont représentés avec leur droite verticale.}
 
 \begin{figure}[H]
-	\includegraphics[width=5cm]{qh3d/geogebra-export3.png}
-	\includegraphics[width=5cm]{qh3d/geogebra-export4.png}
-	\includegraphics[width=5cm]{qh3d/geogebra-export5.png}
+	\begin{center}
+		\includegraphics[width=5cm]{qh3d/geogebra-export3.png}
+		\includegraphics[width=5cm]{qh3d/geogebra-export4.png}
+		\includegraphics[width=5cm]{qh3d/geogebra-export5.png}
+	\end{center}
 \end{figure}
 
 Considérons que l'on dispose du triangle $ABC$ : une face de l'enveloppe convexe, et des points $D$ à $H$ comme étant l'ensemble des points non traités. Comme pour Quickhull 2D, on va déterminer le point le plus extrême (le plus éloigné) de la face $ABC$ : on trouve le point $D$ (en vert).
@@ -170,8 +199,10 @@ La nouvelle enveloppe est alors obtenue par la construction des trois faces $ABD
 Tout semble bien se passer, jusqu'à l'étape de la division :
 
 \begin{figure}[H]
-	\includegraphics[width=6cm]{qh3d/geogebra-export6.png}
-	\includegraphics[width=6cm]{qh3d/geogebra-export7.png}
+	\begin{center}
+		\includegraphics[width=6cm]{qh3d/geogebra-export6.png}
+		\includegraphics[width=6cm]{qh3d/geogebra-export7.png}
+	\end{center}
 \end{figure}
 
 Sur ces deux vues on ne fait \textbf{que} de déplacer la caméra autour du solide.
@@ -195,7 +226,7 @@ La boucle principale de l'algorithme suit ces étapes :
 \end{itemize}
 
 \paragraph{}
-La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient 4 points), sélectionnés suivant la méthode suivante (ref adapté du site) :
+La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient 4 points), sélectionnés suivant la méthode suivante (méthode adaptée de \cite{smith}) :
 \begin{itemize}
 	\item On cherche deux points les plus éloignés sur deux axes (parmi $x$, $y$ et $z$) parmi l'ensemble de points.
 	\item Avec l'arête formée des deux points précédent, on cherche un troisième point le plus éloigné de ce segment.
@@ -353,34 +384,41 @@ Tandis qu'à la section suivante on s'intéresse à la sélection du point parmi
 Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillons de points générés aléatoirement (répartition spatiale aléatoire et uniforme).
 
 \paragraph{Heuristique sur le choix du point} :
-\begin{figure}[H]\begin{tikzpicture}
-		\begin{axis}[
-				title = {},
-				xlabel = {Nombre de points en entrée},
-				ylabel = {Temps de calcul (ms)},
-				legend entries={Point le plus éloigné,Premier point de la liste},
-				legend style={at={(0,1)},anchor=north west}
-			]
-			\addplot+[blue] table {medias/normal.dat};
-			\addplot table {medias/not_extreme_point.dat};
-		\end{axis}
-	\end{tikzpicture}
+\begin{figure}[H]
+	\begin{center}
+		\begin{tikzpicture}
+			\begin{axis}[
+					title = {},
+					xlabel = {Nombre de points en entrée},
+					ylabel = {Temps de calcul (ms)},
+					legend entries={Point le plus éloigné,Premier point de la liste},
+					legend style={at={(0,1)},anchor=north west}
+				]
+				\addplot+[blue] table {medias/normal.dat};
+				\addplot table {medias/not_extreme_point.dat};
+			\end{axis}
+		\end{tikzpicture}
+	\end{center}
 	\caption{La courbe bleue montre ici que la stratégie consistant à prendre le point le plus éloigné du plan courant offre de meilleures performances en temps que celle où l'on prend naïvement le premier point de la liste (courbe rouge).}
 \end{figure}
 
 \paragraph{Heuristique sur le choix du sous-ensemble} :
-\begin{figure}[H]\begin{tikzpicture}
-		\begin{axis}[
-				title = {},
-				xlabel = {Nombre de points en entrée},
-				ylabel = {Temps de calcul (ms)},
-				legend entries={Premier sous-ensemble,Plus petit sous-ensemble,Plus grand sous-ensemble},
-				legend style={at={(0,1)},anchor=north west},
-			]
-			\addplot+[blue] table {medias/normal.dat};
-			\addplot table {medias/smallest_osubset.dat};
-			\addplot table {medias/largest_osubset.dat};
-		\end{axis}\end{tikzpicture}
+\begin{figure}[H]
+	\begin{center}
+		\begin{tikzpicture}
+			\begin{axis}[
+					title = {},
+					xlabel = {Nombre de points en entrée},
+					ylabel = {Temps de calcul (ms)},
+					legend entries={Premier sous-ensemble,Plus petit sous-ensemble,Plus grand sous-ensemble},
+					legend style={at={(0,1)},anchor=north west},
+				]
+				\addplot+[blue] table {medias/normal.dat};
+				\addplot table {medias/smallest_osubset.dat};
+				\addplot table {medias/largest_osubset.dat};
+			\end{axis}
+		\end{tikzpicture}
+	\end{center}
 	\caption{
 		De manière prévisible choisir le plus petit sous-ensemble à chaque itération nuit aux performances de l'algorithme (courbe rouge). En effet en ne prenant à chaque fois que un plus petit sous-ensemble de $n$ points (avec $n > 0$), on se restreint alors à retirer de l'ensemble total $n$ points au mieux à cette itération.\\
 		Il est intéressant de noter ici que prendre le plus grand sous-ensemble (courbe brune) est plus performant que de choisir le premier de la liste (courbe bleue), mais le gain n'est pas aussi significatif que ce qu'on a montré précédemment.
@@ -391,34 +429,40 @@ Les tests ont été conduits en moyennant le temps de calcul pour 50 échantillo
 De la même manière que pour la version 2D, j'ai développé un affichage de l'algorithme de calcul d'enveloppe convexe 3D avec WebGL. Celui-ci s'est avéré absolument indispensable pour débugger le code tout au long du développement. Au final il permet également de visualiser, étape par étape, la construction des différentes faces de l'enveloppe convexe.
 
 \begin{figure}[H]
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_6.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_5.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_4.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_3.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_2.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/init_1.png}
+	\begin{center}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_6.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_5.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_4.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_3.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_2.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/init_1.png}
+	\end{center}
 	\caption{Exemple d'étapes, dans l'ordre chronologique, de la construction de l'enveloppe initiale (tétrahèdre) sur un ensemble de points 3D, face après face.}
 \end{figure}
 
 \begin{figure}[H]
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_10.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_9.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_8.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_7.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_6.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_5.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_4.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_3.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_2.png}
-	\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_1.png}
-	\caption{Exemple d'étapes, dans l'ordre chronologique, de la suppression (en rouge) des faces visibles depuis un point extrême sélectionné (en vert), puis de la reconstructions de nouvelles faces (en vert) depuis le contour du trou engendré avec ledit point.}
+	\begin{center}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_10.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_9.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_8.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_7.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_6.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_5.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_4.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_3.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_2.png}
+		\includegraphics[width=2.65cm]{qh3d/demo3d/add_rem_1.png}
+	\end{center}
+	\caption{Exemple d'étapes, dans l'ordre chronologique, de la suppression (en rouge) des faces visibles depuis un point extrême sélectionné (en vert), puis de la reconstructions de nouvelles faces (en vert) depuis le contour du trou engendré, avec ledit point.}
 \end{figure}
 
 \begin{figure}[H]
-	\includegraphics[width=4cm]{qh3d/demo3d/main_0.png}
-	\includegraphics[width=4cm]{qh3d/demo3d/main_1.png}
-	\includegraphics[width=4cm]{qh3d/demo3d/main_2.png}
-	\includegraphics[width=4cm]{qh3d/demo3d/main_3.png}
+	\begin{center}
+		\includegraphics[width=4cm]{qh3d/demo3d/main_0.png}
+		\includegraphics[width=4cm]{qh3d/demo3d/main_1.png}
+		\includegraphics[width=4cm]{qh3d/demo3d/main_2.png}
+		\includegraphics[width=4cm]{qh3d/demo3d/main_3.png}
+	\end{center}
 	\caption{Dernier exemple sur un grand ensemble de points, engendrant un nombre de faces élevé.}
 \end{figure}
 
@@ -426,7 +470,14 @@ De la même manière que pour la version 2D, j'ai développé un affichage de l'
 Maintenant que nous avons une implantation de Quickhull 3D qui fonctionne dans un style de programmation fonctionnelle, il serait intéressant d'explorer ce qu'il est possible de faire avec Coq. Pour rappel, l'idée à terme serait d'utiliser Coq pour prouver formellement que notre implantation de Quickhull 3D est correcte.
 
 \subsection{Variations par rapport à l'implantation JavaScript}
-% Une des difficultés liées à Coq est sa documentation qui n'est pas très accessible pour une personne débutante.
+Pour cette ré-implantation en Coq, je n'ai pas ré-écrit tout l'algorithme de Quickhull 3D, ni toutes ses structures de données. Le temps qu'il me restait m'aurait été bien insuffisant pour cela. L'idée c'est plutôt d'avoir une preuve de concept, et donc j'ai décidé de n'implémenter que la première partie de l'algorithme qui consiste à \textbf{calculer une enveloppe initiale}.
+
+Ainsi ce que j'ai implanté sont les $vec3$ (pour représenter les points en 3 dimensions), des opérations arithmétiques sur ces mêmes $vec3$, des opérations sur les listes, les $he$ et les $dcel$ avec leurs méthodes (à l'exception de l'opération de suppression de face).
+
+\paragraph{Des détails d'implantation ont été revus par rapport à la version en JavaScript}
+L'exemple le plus parlant est celui d'avoir utilisé la valeur $-1$ à chaque fois qu'il y a un indice qui peut être non-défini (habitude qui me vient du C). En Coq (et en programmation fonctionnelle de manière générale), on peut faire mieux que cela en utilisant des monades. Les monades apportent une réelle sémantique, qui est explicite (une valeur peut-être non-définie), contrairement au fait de choisir une valeur constante arbitraire, qui elle serait spécifique à l'implantation.
+
+J'ai étendu l'utilisation de monades partout où cela me paraissait pertinent (par exemple, pour les opérations d'accès par indice dans une liste). L'intérêt est aussi d'avoir des garde-fous à plusieurs endroits du programme.
 
 \subsection{Extraction du code Coq}
 Dans l'introduction nous avons vu que Coq n'est pas fait pour exporter ou importer des fichiers (autre que des fichiers Coq compilés). Il est aussi très limité en termes de capacités d'exécution de code.
@@ -452,14 +503,27 @@ Qu'en est-il des autres langages ? Je ne les connais pas, cependant mon choix se
 	\item Il a une grande communauté de développeurs, donc potentiellement plus de personnes qui rencontrent les mêmes difficultés de débutant que moi.
 \end{itemize}
 
+\subsubsection{Extraction de Coq vers Haskell}
+L'extraction de code source depuis Coq est une procédure relativement simple mais avec des contraintes assez particulières. De fait, nativement Coq n'implante pas l'extraction de tous les types et structures de données. Le problème se pose alors dans notre cas pour les types de données \texttt{nat} (entiers naturels), \texttt{bool} et \texttt{float}. Des opérations aussi simples, telles que l'addition, la soustraction, le moins unaire de nombres flottants, ou encore la déclaration de constantes flottantes sont tout simplement indéfinies lors de l'extraction.
+
+Une grande partie de mon travail ici aura donc été d'écrire toutes les règles d'extraction indéfinie de Coq vers Haskell. Des exemples donnés page 25 de \cite{magaud:hal-01066671} m'ont bien aidé à comprendre la syntaxe de ces instructions. Ce travail nécessite d'assimiler aussi bien le fonctionnement et la syntaxe de Coq, que celle de Haskell, qui est bien différente.
+
 \subsection{Optimisations et évaluation des performances}
 
 \subsection{Visualisation de la sortie du programme}
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width=5cm]{viewer/screen1.png}
+	\end{center}
+	\caption{Le programme de visualisation fonctionne également avec les enveloppes générées par la version JavaScript de Quickhull 3D.}
+\end{figure}
 
 \section{Conclusion}
 \subsection{Si c'était à refaire}
 \subsection{Pour continuer}
 
+\newpage
 \bibliographystyle{plain}
 \bibliography{refs}
 
