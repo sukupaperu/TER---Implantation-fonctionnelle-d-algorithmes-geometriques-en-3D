@@ -1,8 +1,7 @@
 "use strict";
 
 // int list -> (int, int)
-const get_furthest_min_and_max = (vertex_list) =>
-{
+const get_furthest_min_and_max = (vertex_list) => {
 	const min_x = vertex_list.reduce(first_arg_if_true((min, v) => V(min).x < V(v).x));
 	const max_x = vertex_list.reduce(first_arg_if_true((max, v) => V(max).x > V(v).x));
 	const min_y = vertex_list.reduce(first_arg_if_true((min, v) => V(min).y < V(v).y));
@@ -13,7 +12,7 @@ const get_furthest_min_and_max = (vertex_list) =>
 	const diff_x = V(max_x).x - V(min_x).x;
 	const diff_y = V(max_y).y - V(min_y).y;
 	const diff_z = V(max_z).z - V(min_z).z;
-	
+
 	return diff_x > diff_y
 		? diff_x > diff_z
 			? [min_x, max_x]
@@ -21,12 +20,11 @@ const get_furthest_min_and_max = (vertex_list) =>
 		: diff_y > diff_z
 			? [min_y, max_y]
 			: [min_z, max_z]
-	;
+		;
 };
 
 // int list -> (dcel, oset)
-const get_initial_hull = (vertex_list_0) =>
-{
+const get_initial_hull = (vertex_list_0) => {
 	// deux sommets les plus éloignés sur les 3 axes
 	const [v_a, v_b] = get_furthest_min_and_max(vertex_list_0);
 	const vertex_list_1 = vertex_list_0.filter((v_curr) => v_curr !== v_a && v_curr !== v_b);
@@ -58,34 +56,33 @@ const get_initial_hull = (vertex_list_0) =>
 		// en fonction de quel côté se trouve le sommet d de la face abc
 		// l'orientation de cette dernière n'est pas la même
 		vertex_is_above_plane(v_d, v_a, v_b, v_c)
-			?	add_face(add_face(add_face(add_face(
+			? add_face(add_face(add_face(add_face(
 				new_empty_dcel(),
 				v_a, v_c, v_b),
 				v_b, v_c, v_d),
 				v_c, v_a, v_d),
 				v_a, v_b, v_d)
-			:	add_face(add_face(add_face(add_face(
+			: add_face(add_face(add_face(add_face(
 				new_empty_dcel(),
 				v_a, v_b, v_c),
 				v_c, v_b, v_d),
 				v_b, v_a, v_d),
 				v_a, v_c, v_d)
-	;
-	
+		;
+
 	// calcul des sous-ensemble de points externes pour chaque face du tétrahèdre
 	const outside_set = vertex_list_3.reduce(
-		(outside_set, current_vertex) =>
-		{
+		(outside_set, current_vertex) => {
 			const he_found = find_among_dcel_faces(
 				tetrahedron_hull,
 				(incident_he_of_face) =>
 					vertex_is_above_face_plane(current_vertex, tetrahedron_hull, incident_he_of_face)
 			);
-			
+
 			return he_is_null(he_found)
 				? outside_set
 				: add_vertex_in_oset(outside_set, he_found, current_vertex)
-			;
+				;
 		}
 		,
 		add_empty_osubset(add_empty_osubset(add_empty_osubset(add_empty_osubset(
@@ -99,23 +96,21 @@ const get_initial_hull = (vertex_list_0) =>
 }
 
 // dcel -> he -> int -> (dcel, int list)
-const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_vertex) =>
-{
+const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_vertex) => {
 	// (dcel, int list) -> he -> (dcel, int list)
-	const remove_visible_faces2 = ([convex_hull, deleted_he_list], previous_incident_he) =>
-	{
-		if(he_is_boundary(previous_incident_he))
-			return [convex_hull, deleted_he_list];	    
+	const remove_visible_faces2 = ([convex_hull, deleted_he_list], previous_incident_he) => {
+		if (he_is_boundary(previous_incident_he))
+			return [convex_hull, deleted_he_list];
 
 		const oppo_he = get_he_by_he_index(
 			convex_hull,
 			opposite_he_index(previous_incident_he)
 		);
 
-		if(he_is_null(oppo_he))
+		if (he_is_null(oppo_he))
 			return [convex_hull, deleted_he_list];
 
-		if(!vertex_is_above_face_plane(tested_vertex, convex_hull, oppo_he))
+		if (!vertex_is_above_face_plane(tested_vertex, convex_hull, oppo_he))
 			return [convex_hull, deleted_he_list];
 
 		const updated_hull = remove_face(convex_hull, oppo_he);
@@ -139,9 +134,8 @@ const remove_visible_faces_from_vertex = (hull, source_incident_he, tested_verte
 	return right_res;
 }
 
-const update_outside_set_for_each_new_faces = (convex_hull, outside_set, added_face_list, removed_face_list) => 
-{
-	const [updated_outside_set, untreated_vertex_set] = 
+const update_outside_set_for_each_new_faces = (convex_hull, outside_set, added_face_list, removed_face_list) => {
+	const [updated_outside_set, untreated_vertex_set] =
 		filter_oset_and_get_removed_list(
 			outside_set,
 			(osubset_face_index) =>
@@ -149,19 +143,18 @@ const update_outside_set_for_each_new_faces = (convex_hull, outside_set, added_f
 					(removed_face_index) => removed_face_index === osubset_face_index
 				))
 		)
-	;
+		;
 
 	const newly_created_outside_set = added_face_list.reduce(
-			(constructed_outside_set, added_face_index) =>
-				add_empty_osubset(constructed_outside_set, added_face_index),
-			new_empty_oset()
-		)
-	;
+		(constructed_outside_set, added_face_index) =>
+			add_empty_osubset(constructed_outside_set, added_face_index),
+		new_empty_oset()
+	)
+		;
 
-	const final_outside_set = 
+	const final_outside_set =
 		untreated_vertex_set.reduce(
-			(constructed_outside_set, current_vertex) =>
-			{
+			(constructed_outside_set, current_vertex) => {
 				const face_index_found = added_face_list.find(
 					(added_face) => vertex_is_above_face_plane(
 						current_vertex,
@@ -169,32 +162,31 @@ const update_outside_set_for_each_new_faces = (convex_hull, outside_set, added_f
 						he_by_face_index(convex_hull, added_face)
 					)
 				);
-				
+
 				return is_defined(face_index_found)
 					? add_vertex_in_oset(
 						constructed_outside_set,
-						he_by_face_index(convex_hull, face_index_found), 
+						he_by_face_index(convex_hull, face_index_found),
 						current_vertex
 					)
 					: constructed_outside_set
-				;
+					;
 			},
 			newly_created_outside_set
 		)
-	;
+		;
 
 	return remove_empty_osubset(
 		updated_outside_set.concat(final_outside_set)
 	);
 }
 
-const recursive_quick_hull_3d = (convex_hull, outside_set) =>
-{
+const recursive_quick_hull_3d = (convex_hull, outside_set) => {
 	const current_subset = first_osubset(outside_set);
 	//const current_subset = biggest_osubet(outside_set);
 
 	// condition de terminaison
-	if(!is_defined(current_subset))
+	if (!is_defined(current_subset))
 		return convex_hull;
 
 	// une arrête qui appartient à la face sélectionnée
@@ -203,7 +195,7 @@ const recursive_quick_hull_3d = (convex_hull, outside_set) =>
 	// on cherche le point le plus éloigné de la face
 	const furthest_vertex = osubset_vertex_list(current_subset).reduce(
 		first_arg_if_true(
-			(vertex_a, vertex_b) => 
+			(vertex_a, vertex_b) =>
 				signed_dist_from_face_plane(vertex_a, convex_hull, he_of_current_face)
 				> signed_dist_from_face_plane(vertex_b, convex_hull, he_of_current_face)
 		)
@@ -211,9 +203,9 @@ const recursive_quick_hull_3d = (convex_hull, outside_set) =>
 	//const furthest_vertex = osubset_vertex_list(current_subset)[0];
 
 	GLOBAL_DISP.push_furthest_point_state(furthest_vertex);
-	
+
 	const [opened_hull, removed_face_list] = remove_visible_faces_from_vertex(convex_hull, he_of_current_face, furthest_vertex);
-	
+
 	const boundary_he_list = opened_hull.he_list.filter(
 		(he) => he_is_boundary(he)
 	);
@@ -238,7 +230,7 @@ const recursive_quick_hull_3d = (convex_hull, outside_set) =>
 	);
 
 	GLOBAL_DISP.push_convex_hull_state(final_hull);
-	
+
 	// mise à jour de l'ensemble de points externes à l'enveloppe convexe
 	const final_outside_set = update_outside_set_for_each_new_faces(
 		final_hull,
@@ -250,17 +242,12 @@ const recursive_quick_hull_3d = (convex_hull, outside_set) =>
 	return recursive_quick_hull_3d(final_hull, final_outside_set);
 }
 
-const quick_hull_3d = (vec3_list) =>
-{
+const quick_hull_3d = (vec3_list) => {
 	// liste de tous les sommets
 	const vertex_list = new_ordered_int_list(list_length(vec3_list));
-	
+
 	// on récupère une enveloppe initiale (tétrahèdre) et un ensemble de points externes à ses faces
 	const [initial_hull, outside_set] = get_initial_hull(vertex_list);
-
-	console.table(initial_hull.he_list)
-
-	// return initial_hull;
 
 	GLOBAL_DISP.push_convex_hull_state(initial_hull);
 

@@ -141,7 +141,6 @@ class display {
     };
 
     repere;
-
     all_vertices_vao = null;
     vao_convex_hull = null;
     vao_list = [];

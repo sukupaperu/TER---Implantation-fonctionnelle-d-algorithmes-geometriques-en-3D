@@ -5,13 +5,17 @@
 \usepackage{color}
 
 \usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{frpseudocode}
+\renewcommand*\Call[2]{\textproc{#1}(#2)}
 
 \usepackage{url}
 
-\usepackage[left=2.5cm, right=2.5cm, top=2.5cm]{geometry}
+\usepackage[left=2.0cm, right=2.0cm, top=2.0cm, bottom=2.0cm]{geometry}
 \usepackage{multicol, float}
 
-\usepackage[final]{graphicx}
+\usepackage[final]{graphicx}[draft]
 \graphicspath{{./medias/}}
 
 \usepackage{tikz, pgfplots}
@@ -359,8 +363,6 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 
 Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.
 
-\paragraph*{Note :} si les numéros d'indices choisis pour les demi-arêtes sont ici plus ou moins arbitraires, la structure $dcel$ impose tout de même des contraintes comme nous allons le voir.
-
 \paragraph{Ajout et retrait d'une face dans une $dcel$}
 Il s'agit des deux seules opérations de modification d'une $dcel$.
 
@@ -374,6 +376,175 @@ Un sous-ensemble de points extérieurs (outside subset) est une structure de don
 
 \paragraph*{Ensemble de points extérieurs — $oset$}
 L'ensemble de points extérieurs (outside set) n'est rien d'autre qu'une liste d'$osubset$, chacune associée à une unique face (et son ensemble de points extérieurs associé).
+
+\subsection{Pseudo-code d'implantation}
+Soit $P \subset \mathbf{R^3} $, l'ensemble $n$ des points tridimensionnels donnés en entrée de Quickhull.\\
+Soit $P_{indices}$, l'ensemble des $n$ indices associés aux $n$ points de $P$ ($P_{indices}: P \rightarrow \{ 0, 1, \ldots, {n - 1} \}$).\\
+Soit $O$ un $oset$, l'ensemble des couples $\langle f, O_{subset} \rangle$ de faces et de points extérieurs associés.\\
+Soit $E$ une $dcel$, l'ensemble des $m$ demie-arêtes de l'enveloppe.\\
+Alors à tout moment les propriétés suivantes sur les structures de données sont vérifiées :\\
+Les sous-ensembles de points sont disjoints :
+\[
+	\emptyset = \bigcap_{\langle f, O_{subset} \rangle \in O}^{} { O_{subset}}
+\]
+L'union des sous-ensembles de points est inclus dans l'ensemble $P_{indices}$ :
+\[
+	P_{indices} \supseteq \bigcup_{\langle f, O_{subset} \rangle \in O}^{} O_{subset}
+\]
+Pour tout couple $\langle face_{indice}, O_{subset} \rangle \in O$:
+\[
+	0 \leq face_{indice} < \lfloor m / 3 \rfloor
+\]
+Pour toute arête $he \in E$:
+\[
+	he.index \in \{x \mid 0 \leq x < m\}
+\]
+\[
+	he.opposite \in \{x \mid -1 \leq x < m\},
+\]
+\[
+	he.vertex \in P_{indices}
+\]
+
+
+\subsubsection*{Fonctions principales}
+\begin{algorithm}[H]
+	\caption{Quickhull3DRec}
+	\begin{algorithmic}[1]
+		\Require $P$ la liste des points 3D (reste inchangée lors de l'exécution)
+		\Require $E$ une $dcel$ (enveloppe)
+		\Require $O$ un $oset$ (ensemble des sous-ensembles de points extérieurs associés aux faces de $E$)
+		\Function{Quickhull3DRec}{$P$, $E$, $O$}
+		\If{$O = \emptyset$}
+		\State \Return $E$
+		\Else
+		\State $\langle f_{sel}, O_{sel} \rangle \leftarrow$ \Call{premierOsubset}{$O$} \Comment{$\langle f_{sel}, O_{sel} \rangle \in O$}
+		\State $p_{sel} \leftarrow$ \Call{lePlusEloigne}{$P$, $f_{sel}$, $O_{sel}$} \Comment{$p_{sel} \in O_{sel}$}
+		\State Supprimer $p_{sel}$ du sous-ensemble associé à la face $f_{sel}$ de $O$
+		\State $\langle E, F_{suppr} \rangle \leftarrow$ \Call{supprimerFacesVisibles}{$P$, $E$, $f_{sel}$, $p_{sel}$}
+		\State $\langle E, F_{creees} \rangle \leftarrow$ \Call{reconstruireFaces}{$E$, $p_{sel}$}
+		\State $O \leftarrow$ \Call{mettreAjourOset}{$P$, $E$, $O$, $F_{suppr}$, $F_{creees}$}
+		\State \Return \Call{Quickhull3DRec}{$P$, $E$, $O$}
+		\EndIf
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+Premier appel de la fonction :
+\begin{algorithm}[H]
+	\caption{Quickhull3D}
+	\begin{algorithmic}[1]
+		\Require $P$ une liste de points tridimensionnels dont on veut calculer l'enveloppe convexe 3D
+		\Function{Quickhull3D}{$P$}
+		\State $P_{indices} \leftarrow$ \Call{listeOrdonneeEntiers}{$P$}
+		\State $\langle E_{initiale}, O_{initial} \rangle \leftarrow$ \Call{tetrahedreInitial}{$P_{indices}$}
+		\State \Return \Call{Quickhull3DRec}{$P$, $E_{initiale}$, $O_{initial}$}
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Supression des faces visibles}
+Cet algorithme supprime les faces de l'enveloppe $E$, visibles depuis le point $p_{sel}$. En apparence plutôt complexe, son principe reste assez simple. Il part de la face $f$, la supprime (ligne \ref{suppr_face}, algo. \ref{algo_supprimerFacesVisibles}), puis récursivement explore et supprime ses faces voisines. Les conditions d'arrêt sont que : la face explorée ne soit plus visible depuis $p_{sel}$ (ligne \ref{visible_cond}, algo. \ref{algo_supprimerFacesVisiblesRec}), ou que la face explorée ait déjà été supprimée (ligne \ref{bordure_cond}, algo. \ref{algo_supprimerFacesVisiblesRec}), auquel cas on est sur une arête de bordure.
+
+\begin{algorithm}[H]
+	\caption{supprimerFacesVisiblesRec}
+	\label{algo_supprimerFacesVisiblesRec}
+	\begin{algorithmic}[1]
+		\Require $P$ la liste des points 3D (reste inchangée lors de l'exécution)
+		\Require $E$ une $dcel$
+		\Require $F_{suppr}$ une liste d'indices des faces supprimées
+		\Require $he_{oppo}$ la demie-arête d'où l'on vient
+		\Require $p$ l'indice du point sélectionné (constant)
+		\Function{supprimerFacesVisiblesRec}{$P$, $\langle E, F_{suppr} \rangle$, $he_{oppo}$, $p$}
+		\If{ !\Call{estEnBordure}{$he_{oppo}$}} \label{bordure_cond}
+		\State $he \leftarrow$ \Call{demieAreteOpposee}{$he_{oppo}$}
+		\State $f \leftarrow$ \Call{indiceDeFace}{$he$}
+		\If{\Call{estVisible}{$P$, $E$, $p$, $f$}} \label{visible_cond}
+		\State $E \leftarrow$ \Call{supprimerFace}{$E$, $f$}
+		\State $F_{suppr} \leftarrow F_{suppr} \cup \{ f \}$
+		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demieAretePrec}{he}, p}$
+		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demieAreteSuiv}{he}, p}$
+		\EndIf
+		\EndIf
+		\State \Return $\langle E, F_{suppr} \rangle$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+Premier appel de la fonction :
+\begin{algorithm}[H]
+	\caption{supprimerFacesVisibles}
+	\label{algo_supprimerFacesVisibles}
+	\begin{algorithmic}[1]
+		\Require $P$ la liste des points 3D (reste inchangée lors de l'exécution)
+		\Require $E$ une $dcel$
+		\Require $f$ l'indice de la face sélectionnée
+		\Require $p$ l'indice du point sélectionné
+		\Function{supprimerFacesVisibles}{$P$, $E$, $f$, $p$}
+		\State $E \leftarrow$ \Call{supprimerFace}{$E$, $f$} \label{suppr_face}
+		\State $F_{suppr} \leftarrow \{ f \}$
+		\For{chaque arête $he$ de la face $f$}
+		\State $\langle E, F_{suppr} \rangle \leftarrow$ \Call{supprimerFacesVisiblesRec}{$P$, $\langle E, F_{suppr} \rangle$, $he$, $p$}
+		\EndFor
+		\State \Return $\langle E, F_{suppr} \rangle$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Reconstruction des faces}
+
+\begin{algorithm}[H]
+	\caption{reconstruireFaces}
+	\begin{algorithmic}[1]
+		\Require $E$ une $dcel$, $p$ l'indice du point sélectionné
+		\Function{reconstruireFaces}{$E$, $p_{sel}$}
+		\State $HE_{bord} \leftarrow$ \Call{demieAretesDuBord}{$E$} \Comment {$HE_{bord} \subseteq E$}
+		\State $F_{creees} \leftarrow \emptyset$
+		\For{chaque demie-arête $he$ de $HE_{bord}$}
+		\State $E \leftarrow$ \Call{ajouterFace}{$E$, $he$, $p$}
+		\State $F_{creees} \leftarrow F_{creees} \cup \{ \Call{indiceDeFace}{\Call{demieAreteOppos}{he}} \}$
+		\EndFor
+		\State \Return $\langle E, F_{creees} \rangle$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Mise à jour de l'ensemble de points extérieurs}
+L'appel à cette méthode se fait dans un contexte où l'on a déjà supprimé puis reconstruit des faces. Notre $oset$ contient encore les faces qui ont été supprimées avec leurs points associés, mais pas celles qui ont été créées.
+
+On supprime les sous-ensembles de points associés à des faces supprimées ligne \ref{suppr_faces_oset}, et on garde dans une liste à part les points devenus orphelins, ligne \ref{rapp_points_oset}. Dans la boucle, ligne \ref{faces_creees_oset}, on ajoute à l'$oset$, des sous-ensembles extérieurs vides, associés aux faces nouvellement créées. Lignes \ref{assoc_oset} à \ref{assoc_oset2}, pour chaque point orphelin, on recherche parmi les nouvelles faces une pour laquelle il est visible. Si tel est le cas, ce point est ajouté au sous-ensemble correspondant de l'$oset$, sinon cela signifie qu'il a été capturé dans le volume de la nouvelle enveloppe convexe (auquel cas il est oublié). La ligne \ref{suppr_vide_oset} supprime les sous-ensembles vides de l'$oset$ (ça n'est pas obligatoire en fonction de l'implantation).
+\begin{algorithm}[H]
+	\caption{mettreAjourOset}
+	\begin{algorithmic}[1]
+		\Require $P$ la liste des points 3D (reste inchangée lors de l'exécution)
+		\Require $E$ une $dcel$
+		\Require $O$ un $oset$
+		\Require $F_{suppr}$ la liste d'indices des faces qui ont été supprimées
+		\Require $F_{creees}$ la liste d'indices des faces qui ont été créées
+		\Function{mettreAjourOset}{$P$, $E$, $O$, $F_{suppr}$, $F_{creees}$}
+		\State $V_{atraiter} \leftarrow \emptyset$
+		\For{chaque couple $\langle f, O_{subset} \rangle$ de $O$}
+		\If{$f \in F_{suppr}$}
+		\State $V_{atraiter} \leftarrow V_{atraiter} \cup O_{subset}$ \label{rapp_points_oset}
+		\State $O \leftarrow O \setminus \{\langle f, O_{subset} \rangle\}$ \label{suppr_faces_oset}
+		\EndIf
+		\EndFor
+		\For{chaque face $f$ de $F_{creees}$} \label{faces_creees_oset}
+		\State $O \leftarrow O \cup \{ \langle f, \emptyset \rangle \}$
+		\EndFor
+		\For{chaque point $v$ de $V_{atraiter}$} \label{assoc_oset}
+		\For{chaque face $f$ de $F_{creees}$}
+		\If{ \Call{estVisible}{$P$, $E$, $v$, $f$} }
+		\State Ajouter $v$ dans le sous-ensemble de $f$ dans $O$
+		\State \textbf{Break} \Comment{$v$ est déjà assigné à $f$, donc on peut passer au point suivant}
+		\EndIf
+		\EndFor
+		\EndFor \label{assoc_oset2}
+		\State $O \leftarrow$ \Call{supprimerSousEnsemblesVides}{$O$} \label{suppr_vide_oset}
+		\State \Return $O$
+		\EndFunction
+	\end{algorithmic}
+\end{algorithm}
 
 \subsection{Évaluation des performances}
 Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.
