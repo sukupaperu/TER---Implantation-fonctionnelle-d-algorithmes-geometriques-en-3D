@@ -19,11 +19,12 @@
 \graphicspath{{./medias/}}
 
 \usepackage{tikz, pgfplots}
+\usetikzlibrary{positioning,fit,arrows.meta}
 \usepackage[all]{xy}
 \pgfplotsset{compat=1.5}
 
 \title{Implantation Fonctionnelle \\ d'Algorithmes Géométriques en 3D \\[0.5cm]
-  \large Rapport de projet de recherche}
+  \large Rapport de projet de recherche - Le cas de l'enveloppe convexe : Quickhull}
 \author{
 	Titouan Laurent - Master 1 parcours Image et 3D\\
 	Encadrant : Nicolas Magaud
@@ -35,15 +36,19 @@
 \makeatletter
 \begin{titlepage}
 	\begin{center}
-		\includegraphics[width=0.25\linewidth]{logos/icube.jpg}
-		\includegraphics[width=0.3\linewidth]{logos/uds.jpg}\\[2cm]
 		{\huge \bfseries  \@title }\\[1cm]
 		{\large  \@author}\\[2cm]
 		\begin{center}
 			\includegraphics[width=5cm]{illus/illus0.png}
 			\includegraphics[width=5cm]{illus/illus1.png}
 			\includegraphics[width=5cm]{illus/illus2.png}
+			\\[8cm]
 		\end{center}
+		\includegraphics[width=0.15\linewidth]{logos/icube.jpg}
+		\hspace{1cm}
+		\includegraphics[width=0.2\linewidth]{logos/uds.jpg}
+		\\[1cm]
+		Note : l'impression couleur est recommandée pour ce document.
 	\end{center}
 \end{titlepage}
 \makeatother
@@ -56,22 +61,22 @@
 
 \section{Introduction}
 \paragraph{Preuve assistée par ordinateur}
-Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche qui se veut essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.ggg
+Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.
 
-Cependant, il peut-être fastidieux de chercher à faire une démonstration formelle à la main, d'autant plus qu'en informatique l'écart entre une implantation donnée et sa description formelle représente une limite. Dans le cas des algorithmes géométriques, il y a l'introduction de difficultés supplémentaires, puisque l'on se retrouvera généralement à travailler aussi bien sur des notions topologiques qu'arithmétiques.
+Cependant, il peut être fastidieux de chercher à faire une démonstration formelle à la main, d'autant plus qu'en informatique l'écart entre une implantation donnée et sa description formelle représente une limite. Dans le cas des algorithmes géométriques, il y a l'introduction de difficultés supplémentaires, puisque l'on se retrouve généralement à travailler aussi bien sur des notions topologiques qu'arithmétiques.
 
-À partir de là, les outils outils de preuve automatique se présentent comme une solution viable. Ils permettent de démontrer des propriétés dans une implantation donnée d'un algorithme, et donc d'en prouver la correction. La contrainte étant que l'implantation doit être faite dans un style de programmation fonctionnel. Leur intérêt réside aussi dans le fait qu'on peut en extraire un programme certifié.
+À partir de là, les outils de preuve automatique se présentent comme une solution viable. Ils permettent de démontrer des propriétés dans une implantation donnée d'un algorithme, et donc d'en prouver la correction. La contrainte étant que l'implantation doit être faite dans un style de programmation fonctionnel. Leur intérêt réside aussi dans le fait qu'on peut en extraire un programme certifié.
 
 \paragraph{Application au calcul de l'enveloppe convexe}
-Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci Quickhull se veut être inspiré de Quicksort en proposant une approche de type diviser pour régner, lui assurant une complexité en $O(n\log{}n)$.
+Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci Quickhull est inspiré de Quicksort en proposant une approche de type diviser pour régner, lui assurant une complexité en $O(n\log{}n)$.
 
-Par le passé, une implantation de Quickhull restreinte aux ensembles de points à 2 dimensions a été proposée et prouvée formellement. Seulement, la généralisation de Quickhull aux ensembles à 3 dimensions et plus, à partir de la version précédente, n'est pas une tâche triviale à cause des contraintes supplémentaires de visibilité (qu'on ne retrouve pas en 2 dimensions). Il faut également ajouter que les implantations en 3 dimensions existantes sont le pour la grande majorité faites dans un style de programmation impératif, et donc pas directement adapté à la preuve automatique.
+Par le passé, une implantation de Quickhull restreinte aux ensembles de points à 2 dimensions a été proposée et prouvée formellement \cite{brun:hal-00955400, brun:hal-00916880}. Seulement, la généralisation de Quickhull aux ensembles à 3 dimensions et plus, à partir de la version précédente, n'est pas une tâche triviale à cause des contraintes supplémentaires de visibilité (qu'on ne retrouve pas en 2 dimensions). Il faut également ajouter que les implantations en 3 dimensions existantes sont le pour la grande majorité faites dans un style de programmation impératif, et donc pas directement adapté à la formalisation dans un assistant de preuves comme Coq \cite{coqref}.
 
 \paragraph{}
 Mon travail de recherche a donc pour objectif d'explorer ce qui est envisageable en terme d'implantation en style de programmation fonctionnel, de preuve mais aussi d'aide à la visualisation de l'algorithme Quickhull en 3 dimensions.
 
 \section{Choix d'un langage de programmation}
-Pour ce sujet le langage de programmation retenu est celui de Coq. Coq est un assistant à la construction de preuves automatiques, codées avec une syntaxe qui lui est propre, en paradigme fonctionnel.
+Pour ce sujet le langage de programmation retenu est celui de Coq. Coq est un assistant à la construction de preuves, codées avec une syntaxe qui lui est propre, en paradigme fonctionnel.
 
 Seulement, ici il présente au moins quatre limitations importantes :
 \begin{itemize}
@@ -91,7 +96,7 @@ J'ai donc porté mon choix sur le \textbf{JavaScript}, et ce pour les raisons su
 \end{itemize}
 
 \section{Implantation de Quickhull en 2D en JavaScript}
-Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est d'abord bien plus évident de chercher à bien comprendre le cas restreint (et donc plus simple) des ensembles à deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales. Cela passe donc par l'implantation de l'algorithme, qui sera faite dans un style fonctionnel.
+Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est d'abord bien plus évident de chercher à bien comprendre et me familiariser avec le cas restreint (et donc plus simple) des ensembles de points en deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales. Cela passe donc par l'implantation de l'algorithme, qui sera faite dans un style fonctionnel.
 
 \subsection{Principe général}
 \paragraph{}
@@ -212,7 +217,7 @@ Tout semble bien se passer, jusqu'à l'étape de la division :
 Sur ces deux vues on ne fait \textbf{que} de déplacer la caméra autour du solide.
 En alignant sur une seule droite successivement les points $A$, $D$ et $C$, puis les points $B$, $D$ et $A$, on peut voir que le point $F$ est visible \textbf{simultanément} par deux des faces nouvellement créées.
 
-Cette particularité nous interdit de faire l'étape de la division pour \emph{diviser pour régner}. On comprend également que contrairement à la version 2D où l'on se contentait de modifier supprimer une arête à la fois pour la subdiviser en de nouvelles sous-arêtes, ici on devra parfois supprimer plusieurs faces (car visibles depuis un point extrême) pour reconstruire un certain nombre de faces supplémentaires (l'exemple donné ici est un cas particulier plutôt simple car le point extrême $D$ ne voit qu'une seule face : le triangle $ABC$).
+Cette particularité nous interdit de faire l'étape de la division pour \emph{diviser pour régner}. On comprend également que contrairement à la version 2D où l'on se contentait d'agir sur une arête à la fois pour la subdiviser en de nouvelles sous-arêtes, ici on devra parfois supprimer plusieurs faces (car visibles depuis un point extrême) pour reconstruire un certain nombre de faces supplémentaires (l'exemple donné ici est un cas particulier plutôt simple car le point extrême $D$ ne voit qu'une seule face : le triangle $ABC$).
 
 \subsection{Adaptation de l'algorithme}
 
@@ -221,7 +226,7 @@ Puisque l'on ne peut pas faire de \emph{diviser pour régner}, l'algorithme doit
 \paragraph{}
 La boucle principale de l'algorithme suit ces étapes :
 \begin{itemize}
-	\item On choisit une face parmi les faces de l'enveloppe convexe courante dont le sous-ensembles de points non-traités associé est non-vide.
+	\item On choisit une face parmi les faces de l'enveloppe convexe courante dont le sous-ensemble de points non-traités associé est non-vide.
 	\item On prend le point le plus extrême (le plus éloigné) par rapport à ladite face depuis le sous-ensemble de points associé.
 	\item On supprime \textbf{toutes} les faces visibles de l'enveloppe convexe depuis ce point.
 	\item On reconstruit l'enveloppe convexe en formant des faces (triangles) entre ce point et le bord du trou laissé à l'étape précédente.
@@ -233,7 +238,7 @@ La boucle principale de l'algorithme suit ces étapes :
 La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient 4 points), sélectionnés suivant la méthode suivante (méthode adaptée de \cite{smith}) :
 \begin{itemize}
 	\item On cherche deux points les plus éloignés sur deux axes (parmi $x$, $y$ et $z$) parmi l'ensemble de points.
-	\item Avec l'arête formée des deux points précédent, on cherche un troisième point le plus éloigné de ce segment.
+	\item Avec l'arête formée des deux points précédents, on cherche un troisième point le plus éloigné de ce segment.
 	\item On dispose maintenant d'une face (un triangle) depuis laquelle on va chercher un quatrième point qui en est le plus éloigné.
 	\item On peut dès lors construire le tétrahèdre formé par ces 4 points.
 	\item On attribue (arbitrairement) à chaque face un sous-ensemble de points qui lui sont visibles.
@@ -282,8 +287,7 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 	\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
 \end{itemize}
 
-\paragraph{Exemple simple en 2D} :
-
+\paragraph{Exemple simple en 2D}
 \begin{figure}[H]
 	\[\begin{aligned}[c]
 			\entrymodifiers={+[o][F]}
@@ -660,26 +664,82 @@ Les langages d'extraction supportés par Coq sont au nombre de quatre. À savoir
 
 \subparagraph*{JSON}
 Ma première idée fut de choisir JSON plutôt qu'un autre. En effet, je n'ai aucune connaissance de ces autres langages, et j'ai d'abord estimé qu'il serait plus long pour moi de me former à l'un de ceux-ci. De plus, le JSON est extrêmement simple à comprendre et à utiliser, il le serait d'autant plus lorsqu'il s'agira de le raccorder à ce que j'avais déjà développé en JavaScript.
-
+\begin{figure}[H]
+	\begin{center}
+		\tikzstyle{myblock} = [rectangle, draw]
+		\begin{tikzpicture}
+			\node[myblock] (I1) {Coq};
+			\node[myblock, right=of I1, xshift=2cm] (I2) {JSON};
+			\node[myblock, right=of I2, xshift=2cm] (I3) {JavaScript};
+			\draw[->] (I1)--node[above] {Extraction}(I2);
+			\draw[->] (I2)--node[above] {?}(I3);
+		\end{tikzpicture}
+	\end{center}
+\end{figure}
 Seulement voilà, comme il ne s'agit que de données, l'agencement à l'intérieur d'un fichier JSON est purement arbitraire. Hors l'extraction de Coq vers ce format n'est absolument pas documenté. Il n'y a même aucune assurance pour que le code extrait soit correct.
 
 Faire la rétro-ingénierie des fichiers extraits depuis Coq aurait été d'une part difficile, mais en plus excessivement long à réaliser, sans aucune garantie de succès.
 
 JSON n'est donc plus un choix viable à ce stade.
 
-\subparagraph*{OCaml, Haskell et Scheme}
-Qu'en est-il des autres langages ? Je ne les connais pas, cependant mon choix se portera sur Haskell et ce pour les raisons (subjectives) suivantes :
+\subparagraph*{OCaml}
+OCaml était ma seconde option. Bien que je ne connaisse pas ce langage, j'ai découvert l'existence d'un compilateur appelé Js\_of\_ocaml, qui permet de compiler du bytecode OCaml vers du JavaScript.
+\begin{figure}[H]
+	\begin{center}
+		\tikzstyle{myblock} = [rectangle, draw]
+		\begin{tikzpicture}
+			\node[myblock] (I1) {Coq};
+			\node[myblock, right=of I1, xshift=2cm] (I2) {OCaml};
+			\node[myblock, right=of I2, xshift=2cm] (I3) {Bytecode OCaml};
+			\node[myblock, right=of I3, xshift=2cm] (I4) {JavaScript};
+			\draw[->] (I1)--node[above] {Extraction}(I2);
+			\draw[->] (I2)--node[above] {Compilation}(I3);
+			\draw[->] (I3)--node[above] {Js\_of\_ocaml}(I4);
+		\end{tikzpicture}
+	\end{center}
+\end{figure}
+Sur le papier c'était clairement la meilleure solution puisqu'elle aurait permis l'utilisation de ce que j'avais déjà fait auparavant en termes d'affichage et d'interface en JavaScript. Malheureusement, l'installation et le paramétrage d'un tel environnement était très chronophage et mes quelques essais successifs ne m'ont pas permis d'obtenir quoi que ce soit d'utilisable.
+
+\subparagraph*{Haskell et Scheme}
+Qu'en est-il des autres langages ? Je ne les connais pas, cependant mon choix se portera sur \textbf{Haskell} et ce pour les raisons (subjectives) suivantes :
 \begin{itemize}
 	\item Sa documentation (Hoogle) me parait être la plus accessible.
 	\item Il a une grande communauté de développeurs, donc potentiellement plus de personnes qui rencontrent les mêmes difficultés de débutant que moi.
 \end{itemize}
+Au final mon implantation suit le diagramme suivant pour l'exécution en Haskell. On pourra noter le "Viewer" à droite, c'est un programme d'affichage simplifié que j'ai écrit en C pour visualiser des points et des maillages triangulaire. Réutiliser ce que j'avais déjà programmé aurait été contraignant, sachant que JavaScript impose de passer par l'interface graphique pour charger des fichiers, ce qui n'est pas le cas avec le Viewer.
+\begin{figure}[H]
+	\begin{center}
+		\tikzstyle{myblock} = [rectangle, draw]
+		\begin{tikzpicture}
+			\node[myblock] (I1) {Coq};
+			\node[myblock, right=of I1, xshift=2cm] (I2) {Haskell};
+			\node[myblock, right=of I2, xshift=2cm] (I3) {Exécutable};
+			\node[myblock, right=of I3, xshift=2cm] (I4) {Viewer};
+			\draw[->] (I1)--node[above] {Extraction}(I2);
+			\draw[->] (I2)--node[above] {Compilation}(I3);
+			\draw[->] (I3)--node[above] {Exécution}(I4);
+		\end{tikzpicture}
+	\end{center}
+\end{figure}
 
 \subsubsection{Extraction de Coq vers Haskell}
 L'extraction de code source depuis Coq est une procédure relativement simple mais avec des contraintes assez particulières. De fait, nativement Coq n'implante pas l'extraction de tous les types et structures de données. Le problème se pose alors dans notre cas pour les types de données \texttt{nat} (entiers naturels), \texttt{bool} et \texttt{float}. Des opérations aussi simples, telles que l'addition, la soustraction, le moins unaire de nombres flottants, ou encore la déclaration de constantes flottantes sont tout simplement indéfinies lors de l'extraction.
 
 Une grande partie de mon travail ici aura donc été d'écrire toutes les règles d'extraction indéfinie de Coq vers Haskell. Des exemples donnés page 25 de \cite{magaud:hal-01066671} m'ont bien aidé à comprendre la syntaxe de ces instructions. Ce travail nécessite d'assimiler aussi bien le fonctionnement et la syntaxe de Coq, que celle de Haskell, qui est bien différente.
 
-\subsection{Optimisations et évaluation des performances}
+\subsection{Optimisations et performances}
+Je n'ai pas eu beaucoup de temps pour évaluer et comparer les performances avec cette version du programme. En revanche, ce qui m'est très vite devenu apparent est que le programme est significativement plus lent que la version en JavaScript. J'ai effectué un test simple sur un même jeu de données (3000 points répartis uniformément), en évaluant uniquement le temps de calcul de l'enveloppe initiale dans les deux cas.
+\begin{itemize}
+	\item En JavaScript : l'ordre de grandeur en temps est de 160 millisecondes.
+	\item En Haskell : il est de 3000 millisecondes.
+\end{itemize}
+Cette différence n'est pas négligeable, surtout quand on sait que JavaScript n'est pas réputé pour être ce qu'il y a de plus performant.
+
+Dans un premier temps j'ai apporté une optimisation en ce qui concerne les accès aux tableaux, en modifiant des règles d'extraction vers Haskell. Le gain est net puisque cette fois-ci le temps de calcul est de 1300 millisecondes, mais c'est encore bien loin de ce que l'on pourrait attendre.
+
+Une dernière méthode consiste à indiquer au compilateur de Haskell que l'on souhaite une compilation plus poussée. On arrive donc à un temps de calcul de 930 millisecondes.
+
+Je n'ai pas exploré plus que cela l'optimisation, mais il n'est pas impossible que l'arithmétique sur les entiers naturels, telle qu'obtenue après extraction, soit la partie fautive de l'algorithme.
 
 \subsection{Visualisation de la sortie du programme}
 
@@ -691,8 +751,23 @@ Une grande partie de mon travail ici aura donc été d'écrire toutes les règle
 \end{figure}
 
 \section{Conclusion}
+\subsection{Pour résumer}
+
+
 \subsection{Si c'était à refaire}
+Mon sujet de TER est un sujet plutôt libre. Et parmi tous les choix et les approches que j'ai pu aborder pour y répondre, avec le recul il ne me semble pas qu'ils aient été les plus pertinents.
+
+Travailler sur l'algorithme Quickhull en particulier pouvait être intéressant dans la mesure où, en théorie, le paradigme \emph{diviser pour régner} était exploitable. On peut alors autoriser la parallélisation, et donc une meilleure utilisation des ressources informatiques. Mais cela n'est pas le cas ici, nous l'avons vu, Quickhull en trois dimensions a un fonctionnement surtout itératif et non récursif. Hors il existe bel et bien des algorithmes de calcul de l'enveloppe convexe à trois dimensions en \emph{diviser pour régner} \cite{https://doi.org/10.48550/arxiv.1205.1171}.
+
+Un autre axe d'amélioration possible porte sur le fait d'utiliser JavaScript. Je l'ai choisi par facilité et méconnaissance d'un autre langage. Mais je pense que son principal défaut réside dans la lisibilité du code que j'ai écrit. JavaScript est un langage faiblement typé, cela veut dire que le type des variables n'est pas explicite, pire encore il y a beaucoup de conversions implicites et les types sont dynamiques. Hors pour le travail de ré-écriture en Coq de Quickhull, le fait de repartir de la version JavaScript est une grande source de confusion. S'il fallait le refaire je choisirais sûrement un langage tel que le C++, ou alors dans l'idéal l'OCaml, langage dans lequel Coq a lui-même été écrit.
+
 \subsection{Pour continuer}
+
+% Générateur de points sources
+% Un autre algorithme éventuellement
+% Continuer l'implantation Coq
+% Développer un affichage plus poussé/flexible/modulaire pour la version coq
+% Tenter l'approche Coq -> OCaml -> OCamlToJS -> JS
 
 \newpage
 \bibliographystyle{plain}

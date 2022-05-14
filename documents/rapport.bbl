@@ -5,6 +5,25 @@ C.~Bradford Barber, David~P. Dobkin, and Hannu Huhdanpaa.
 \newblock The quickhull algorithm for convex hulls.
 \newblock {\em ACM Trans. Math. Softw.}, 22(4):469–483, dec 1996.
 
+\bibitem{brun:hal-00955400}
+Christophe Brun, Jean-Fran{\c c}ois Dufourd, and Nicolas Magaud.
+\newblock {Designing and proving correct a convex hull algorithm with hypermaps
+  in Coq}.
+\newblock {\em {Computational Geometry}}, 45(8):436--457, October 2012.
+
+\bibitem{brun:hal-00916880}
+Christophe Brun, Jean-Fran{\c c}ois Dufourd, and Nicolas Magaud.
+\newblock {Formal Proof in Coq and Derivation of a Program in C++ to Compute
+  Convex Hulls}.
+\newblock In Jacques Fleuriot \&~Testsuo Ida, editor, {\em {Automated Deduction
+  in Geometry (Post-proceedings)}}, LNCS, pages 71--88, Edinbourg, United
+  Kingdom, September 2012. {Springer}.
+
+\bibitem{coqref}
+Coq development team.
+\newblock The coq proof assistant reference manual, version 8.11.0.
+\newblock \url{https://coq.inria.fr/refman/}, 2020.
+
 \bibitem{magaud:hal-01066671}
 Nicolas Magaud, Agathe Chollet, and Laurent Fuchs.
 \newblock {Formalizing a Discrete Model of the Continuum in Coq from a Discrete
@@ -16,5 +35,9 @@ Nicolas Magaud, Agathe Chollet, and Laurent Fuchs.
 Jordan Smith.
 \newblock Quickhull 3d.
 \newblock \url{http://algolist.ru/maths/geom/convhull/qhull3d.php}.
+
+\bibitem{https://doi.org/10.48550/arxiv.1205.1171}
+Jeffrey~M. White and Kevin~A. Wortman.
+\newblock Divide-and-conquer 3d convex hulls on the gpu, 2012.
 
 \end{thebibliography}

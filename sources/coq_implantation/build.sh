@@ -9,9 +9,9 @@ elif [ "$1" = "makefile" ]; then
     echo "Done."
 elif [ "$1" = "haskell" ]; then
     cd haskell
+    # -02 pour une compilation plus lente mais avec plus d'optimiations
     ghc -O2 --make Main.hs
     echo "Done."
 else
     echo "Unknown command"
 fi
-# ghc -o haskell/test haskell/test.hs
