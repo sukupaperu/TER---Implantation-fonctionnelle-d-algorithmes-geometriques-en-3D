@@ -403,6 +403,7 @@ INPUT ./medias/qh3d/geogebra-export7.png
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmbx7.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmbx5.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmr8.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmcsc10.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmcsc10.tfm
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/medias/normal.dat
@@ -470,10 +471,16 @@ INPUT ./medias/qh3d/demo3d/main_2.png
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/./medias/qh3d/demo3d/main_3.png
 INPUT ./medias/qh3d/demo3d/main_3.png
 INPUT ./medias/qh3d/demo3d/main_3.png
-INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm
+INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/./medias/viewer/screen0.png
+INPUT ./medias/viewer/screen0.png
+INPUT ./medias/viewer/screen0.png
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/./medias/viewer/screen1.png
 INPUT ./medias/viewer/screen1.png
 INPUT ./medias/viewer/screen1.png
+INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/./medias/illus/illus1.png
+INPUT ./medias/illus/illus1.png
+INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/./medias/illus/illus2.png
+INPUT ./medias/illus/illus2.png
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/rapport.bbl
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/rapport.bbl
 INPUT /home/paperu/Documents/Partage/S2M1/TER/sources.gitlab/ter-implantation-fonctionnelle-d-algorithmes-geometriques-en-3d/documents/rapport.aux
