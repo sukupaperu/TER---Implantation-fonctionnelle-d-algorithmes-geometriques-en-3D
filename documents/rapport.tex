@@ -13,7 +13,6 @@
 \usepackage{url}
 
 \usepackage[left=2.0cm, right=2.0cm, top=2.0cm, bottom=2.0cm]{geometry}
-\usepackage{multicol, float}
 
 \usepackage[final]{graphicx}[draft]
 \graphicspath{{./medias/}}
@@ -23,8 +22,8 @@
 \usepackage[all]{xy}
 \pgfplotsset{compat=1.5}
 
-\title{Implantation Fonctionnelle \\ d'Algorithmes Géométriques en 3D \\[0.5cm]
-  \large Rapport de projet de recherche - Le cas de l'enveloppe convexe : Quickhull}
+\title{Implantation Fonctionnelle\\d'Algorithmes Géométriques en 3D\\[0.5cm]
+  \large Rapport de projet de recherche\\[0.25cm]Le cas de l'enveloppe convexe : Quickhull}
 \author{
 	Titouan Laurent - Master 1 parcours Image et 3D\\
 	Encadrant : Nicolas Magaud
@@ -53,37 +52,35 @@
 \end{titlepage}
 \makeatother
 
-\newpage
-
-\newpage
+\pagebreak
 \tableofcontents
-\newpage
 
+\pagebreak
 \section{Introduction}
 \paragraph{Preuve assistée par ordinateur}
-Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises est une tâche essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse et donc de celle des implantations qui en découlent.
+Prouver la correction d'un algorithme, c'est à dire démontrer formellement qu'il répond à des spécifications précises, est une tâche essentielle dans de nombreux domaines de l'informatique. Cela permet de s'assurer de sa robustesse, et donc, de celle des implantations qui en découlent.
 
 Cependant, il peut être fastidieux de chercher à faire une démonstration formelle à la main, d'autant plus qu'en informatique l'écart entre une implantation donnée et sa description (formelle) représente une limite. Dans le cas des algorithmes géométriques, il y a l'introduction de difficultés supplémentaires, puisque l'on se retrouve généralement à travailler aussi bien sur des notions topologiques qu'arithmétiques.
 
 À partir de là, les outils de preuve automatique se présentent comme une solution viable. Ils permettent de démontrer des propriétés dans une implantation donnée d'un algorithme, et donc d'en prouver la correction. La contrainte étant que, l'implantation doit être faite dans un style de programmation fonctionnel. Leur intérêt réside aussi dans le fait qu'on peut en extraire un programme certifié.
 
 \paragraph{Application au calcul de l'enveloppe convexe}
-Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci Quickhull est inspiré de Quicksort en proposant une approche de type diviser pour régner, lui assurant une complexité en $O(n\log{}n)$.
+Le calcul de l'enveloppe convexe d'un ensemble fini de points est un problème bien connu en géométrie et en informatique. Un certain nombre d'algorithmes existent pour le résoudre, et parmi ceux-ci il y a Quickhull, inspiré de Quicksort, qui propose une approche de type \emph{diviser pour régner}, lui assurant une complexité en $O(n\log{n})$.
 
-Par le passé, une implantation de Quickhull restreinte aux ensembles de points à 2 dimensions a été proposée et prouvée formellement \cite{brun:hal-00955400, brun:hal-00916880}. Seulement, la généralisation de Quickhull aux ensembles à trois dimensions, n'est pas une tâche triviale à cause de contraintes supplémentaires de visibilité — qu'on ne retrouve pas en 2 dimensions. Il faut également ajouter que les implantations en 3 dimensions existantes sont pour la grande majorité faites dans un style de programmation impératif, et donc pas directement adapté à la formalisation dans un assistant de preuves comme Coq \cite{coqref}.
+Par le passé, une implantation incrémentale du calcul de l'enveloppe convexe, restreinte aux ensembles de points à deux dimensions a été proposée et prouvée formellement \cite{brun:hal-00955400, brun:hal-00916880}. On souhaiterait en faire de même avec Quickhull, mais en trois dimensions. Ce n'est pas une tâche triviale, notamment à cause de contraintes supplémentaires de visibilité — qu'on ne retrouve pas en deux dimensions. Il faut également ajouter que les implantations en trois dimensions existantes sont, pour la grande majorité, faites dans un style de programmation impératif, et donc pas directement adaptées à la formalisation dans un assistant de preuves comme Coq \cite{coqref, casteran:hal-00344237}.
 
 \paragraph{}
-Mon travail de recherche a donc pour objectif d'explorer ce qui est envisageable en terme d'implantation en style de programmation fonctionnel, mais aussi d'aide à la visualisation de l'algorithme Quickhull en 3 dimensions. La finalité étant, de pouvoir en faire la démonstration formelle avec Coq.
+Mon travail de recherche a donc pour objectif d'explorer ce qui est envisageable en terme d'implantation en style de programmation fonctionnel, mais aussi d'aide à la visualisation de l'algorithme Quickhull en trois dimensions. La finalité étant de pouvoir en faire la démonstration formelle avec Coq.
 
 \section{Choix d'un langage de programmation}
-Pour ce sujet le langage de programmation retenu est celui de Coq. Coq est un assistant à la construction de preuves, codées avec une syntaxe qui lui est propre, en paradigme fonctionnel.
+Pour ce sujet, le langage de programmation retenu est celui de Coq. Coq est un assistant à la construction de preuves, codées avec une syntaxe qui lui est propre, en paradigme fonctionnel.
 
 Seulement, ici il présente au moins quatre limitations importantes :
 \begin{itemize}
 	\item C'est un langage plutôt austère à prendre en main, sa syntaxe est loin d'être évidente et donc il n'est que peu pratique pour développer rapidement et aisément.
 	\item Il ne permet nativement pas de faire du dessin graphique, ce qui serait pourtant très pratique pour vérifier visuellement le bon fonctionnement des programmes développés.
 	\item Il en est de même pour la lecture et l'écriture de fichiers (par exemple, pour stocker l'enveloppe convexe).
-	\item Coq n'est pas un environnement dédié à l'exécution de programmes. En effet il n'est que très peu performant en temps et en capacités de calcul. Même lorsqu'il s'agit de faire des opérations arithmétiques sur de simples entiers non signés.
+	\item Coq n'est pas un environnement dédié à l'exécution de programmes. En effet, il n'est que très peu performant en temps et en capacités de calcul, même lorsqu'il s'agit de faire des opérations arithmétiques sur de simples entiers non signés.
 \end{itemize}
 
 \subparagraph{}
@@ -97,11 +94,11 @@ J'ai donc porté mon choix sur le \textbf{JavaScript}, et ce pour les raisons su
 
 \pagebreak
 \section{Implantation de Quickhull en 2D en JavaScript}
-Avant de commencer à directement travailler sur Quickhull en 3 dimensions, il m'est d'abord bien plus évident de chercher à bien comprendre et me familiariser avec le cas restreint — et donc plus simple — des ensembles de points en deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales. Cela passe donc par l'implantation de l'algorithme, qui sera faite dans un style fonctionnel.
+Plutôt qu'immédiatement travailler sur Quickhull en trois dimensions, il m'est d'abord bien plus évident de chercher à bien comprendre et me familiariser avec le cas restreint — et donc plus simple — aux ensembles de points en deux dimensions, ne serait-ce que pour en cerner les caractéristiques principales. Cela passe donc par l'implantation de l'algorithme, qui sera faite dans un style fonctionnel.
 
 \subsection{Principe général}
 \paragraph{}
-L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école" de la technique du \emph{diviser pour régner}. Pour s'en convaincre on peut reprendre l'exemple suivant, illustrant des étapes successives de la construction de l'enveloppe.
+L'algorithme Quickhull en deux dimensions pourrait être qualifié de "cas d'école" de la technique du \emph{diviser pour régner}. Pour s'en convaincre, on peut reprendre l'exemple suivant, illustrant des étapes successives de la construction de l'enveloppe.
 
 \begin{figure}[H]
 	\begin{center}
@@ -111,7 +108,7 @@ L'algorithme Quickhull en 2 dimensions pourrait être qualifié de "cas d'école
 	\end{center}
 \end{figure}
 
-Considérons que l'on dispose des points suivants. Supposons également qu'on sait que les points $A$ et $B$ (en rouge) appartiennent à l'enveloppe convexe (arête en pointillé). La prochaine étape de l'algorithme est alors de déterminer le point le plus extrême (le plus éloigné) de l'arête $AB$ : on trouve le point $C$ (en vert).
+Considérons que l'on dispose des points, tels qu'illustrés ci-dessus. Supposons également que l'on sait que les points $A$ et $B$ (en rouge) appartiennent à l'enveloppe convexe (arête en pointillé). La prochaine étape de l'algorithme est alors de déterminer le point le plus extrême (c'est à dire le plus éloigné) de l'arête $AB$ : on trouve le point $C$ (en vert).
 
 \begin{figure}[H]
 	\begin{center}
@@ -119,14 +116,9 @@ Considérons que l'on dispose des points suivants. Supposons également qu'on sa
 	\end{center}
 \end{figure}
 
-Sachant la nouvelle enveloppe obtenue, on peut procéder à la division du problème en deux sous-problèmes : pour chaque arête nouvellement créée (ici $AC$ et $CB$), on forme un sous-ensemble de points (entourés en bleu) en ne gardant que ceux qui sont visibles depuis l'arête en question. \emph{Ici $H$ et $G$ ne sont pas visibles (les arêtes sont orientées) ni par $AC$, ni par $CB$, donc ils ne font pas partie de l'enveloppe convexe.}
+Sachant la nouvelle enveloppe obtenue, on peut procéder à la division du problème en deux sous-problèmes : pour chaque arête nouvellement créée (ici $AC$ et $CB$), on forme un sous-ensemble de points associé (entourés en bleu) en ne gardant que ceux qui sont visibles. \emph{Ici $H$ et $G$ ne sont pas visibles (les arêtes sont orientées), ni par $AC$, ni par $CB$, donc ils ne font pas partie de l'enveloppe convexe.}
 
 On peut alors récursivement appliquer le même algorithme sur les deux sous-ensembles générés (entourés en bleu ici) par rapport à leur arête respective ($AC$ et $CB$). L'enveloppe convexe est implicitement construite par les opérations de combinaison des données de retour des sous-appels récursifs (il s'agit basiquement d'une liste ordonnée des points appartenant à l'enveloppe convexe).
-
-% \paragraph{Note :}
-% Il est important de noter qu'un point fort de cet algorithme réside dans le choix du point le plus extrême par rapport à une arête. Avec cette méthode on s'assure d'avoir deux sous-ensembles disjoints de points associés aux nouvelles arêtes, et donc on peut appliquer le même algorithme sur les deux sous-ensembles.
-
-% Si on n'avait pas l'assurance que les sous-ensembles sont disjoints, on ne pourrait tout simplement pas faire l'opération de division, et donc pas de \emph{diviser pour régner}.
 
 \paragraph{}
 La première étape de Quickhull en 2D (et donc des premiers appels récursifs) peut varier en fonction des implantations. Pour ma part j'ai choisi celle qui consiste à prendre les deux points sur un même axe ($x$ ou $y$) qui sont les plus éloignés l'un de l'autre. On obtient une arête dont chacune des extrêmités appartient à l'enveloppe convexe. Il suffit alors de lancer l'algorithme précédent en partant successivement de chacun des deux côtés de l'arête.
@@ -134,7 +126,7 @@ La première étape de Quickhull en 2D (et donc des premiers appels récursifs) 
 \subsection{Structures de données}
 En termes de structures de données il n'y a besoin que de trois structures principales :
 \begin{itemize}
-	\item Un point constitué de deux coordonnées flottantes $x$ et $y$.
+	\item Un point constitué de deux coordonnées flottantes : $x$ et $y$.
 	\item Une liste (statique) de points dont on va chercher à calculer l'enveloppe convexe.
 	\item Une liste (dynamique) d'entiers non signés pour représenter aussi bien les ensembles de points (indices des points) associés à une arête, que ceux formant l'enveloppe convexe (cette liste est ordonnée dans l'ordre de voisinage des sommets des arêtes).
 \end{itemize}
@@ -142,7 +134,7 @@ En termes de structures de données il n'y a besoin que de trois structures prin
 Du fait de la simplicité de ces structures, elles ne représentent pas une contrainte particulière pour une implantation en style fonctionnel.
 
 \subsection{Implantation et démo visuelle}
-En plus d'implanter Quickhull en 2D, j'ai développé un affichage en WebGL qui permet de visualiser et de naviguer entre les étapes de l'algorithme sur des exemples. La visualisation est un moyen de vérifier mais aussi de mieux comprendre le fonctionnement de ce qui est implanté.
+En plus d'implanter Quickhull en 2D, j'ai développé un affichage en WebGL qui permet de visualiser et de naviguer entre les étapes de l'algorithme, sur des exemples. La visualisation est un moyen de vérifier mais aussi de mieux comprendre le fonctionnement de ce qui est implanté.
 
 Les captures qui suivent sont celles dudit affichage, avec le code couleur suivant :
 \begin{itemize}
@@ -182,15 +174,15 @@ Les captures qui suivent sont celles dudit affichage, avec le code couleur suiva
 
 \pagebreak
 \section{Implantation de Quickhull en 3D en JavaScript}
-Implanter Quickhull restreint aux ensembles de points en 2D s'est révélé être assez simple, malgré la contrainte de devoir programmer en style fonctionnel. Dans cette section on s'attarde sur la version en 3D, qui représente la partie la plus importante de mon travail de recherche.
+Implanter Quickhull restreint aux ensembles de points en 2D s'est révélé être assez simple, même en sachant la contrainte de devoir programmer en style fonctionnel. Dans cette section on s'attarde sur la version en 3D, qui représente la partie la plus importante de mon travail de recherche.
 
 \subsection{Principe et spécificités}
-Au-delà de 2 dimensions, l'algorithme Quickhull est nettement plus complexe à implanter. Déjà, en trois dimensions une enveloppe convexe n'est plus une suite d'arêtes mises bout à bout, mais un maillage surfacique triangulaire. Ce qui va demander de penser à une nouvelle structure de données adaptée.
+Au-delà de deux dimensions, l'algorithme Quickhull est nettement plus complexe à implanter. Déjà, en trois dimensions une enveloppe convexe n'est plus une suite d'arêtes mises bout à bout, mais un maillage surfacique triangulaire. Ce qui va demander de penser à une nouvelle structure de données adaptée.
 
 De plus, il n'est plus possible de faire un algorithme en \emph{diviser pour régner}, et pour le comprendre on va regarder un exemple similaire à celui donné pour Quickhull 2D.
 
 \paragraph{}
-\emph{Pour aider à la lisibilité des points dans l'espace 3D, le triangle $ABC$ est sur le plan de la grille, et les points $D$ à $H$ sont représentés avec leur droite verticale.}
+\emph{Pour aider à la lisibilité des illustrations : le triangle $ABC$ est sur le plan de la grille dessinée, et des droites perpendiculaires à ce plan passent par les points $D$ à $H$.}
 
 \begin{figure}[H]
 	\begin{center}
@@ -200,12 +192,12 @@ De plus, il n'est plus possible de faire un algorithme en \emph{diviser pour ré
 	\end{center}
 \end{figure}
 
-Considérons que l'on dispose du triangle $ABC$ : une face de l'enveloppe convexe, et des points $D$ à $H$ comme étant l'ensemble des points non traités. Comme pour Quickhull 2D, on va déterminer le point le plus extrême (le plus éloigné) de la face $ABC$ : on trouve le point $D$ (en vert).
+Considérons que nous disposons du triangle $ABC$ comme étant une face de l'enveloppe convexe, et des points $D$ à $H$ comme étant l'ensemble des points non traités. Comme pour Quickhull 2D, on va déterminer le point le plus extrême (c'est à dire le plus éloigné) de la face $ABC$ : on trouve le point $D$ (en vert).
 
-La nouvelle enveloppe est alors obtenue par la construction des trois faces $ABD$, $ACD$, $BCD$. Le prédicat de visibilité nous permet de déterminer que le point $G$ (en gris) n'appartient pas à l'enveloppe convexe car non visible des trois faces.
+La nouvelle enveloppe est alors obtenue par la construction des trois faces $ABD$, $ACD$ et $BCD$. Le prédicat de visibilité nous permet de déterminer que le point $G$ (en gris) n'appartient pas à l'enveloppe convexe, car non visible des trois faces nouvellement créées.
 
 \paragraph{}
-Tout semble bien se passer, jusqu'à l'étape de la division :
+Tout semble bien se passer, jusqu'à l'hypothétique étape de division du problème :
 
 \begin{figure}[H]
 	\begin{center}
@@ -214,10 +206,9 @@ Tout semble bien se passer, jusqu'à l'étape de la division :
 	\end{center}
 \end{figure}
 
-Sur ces deux vues on ne fait \textbf{que} de déplacer la caméra autour du solide.
-En alignant sur une seule droite successivement les points $A$, $D$ et $C$, puis les points $B$, $D$ et $A$, on peut voir que le point $F$ est visible \textbf{simultanément} par deux des faces nouvellement créées.
+Sur ces deux vues, la caméra est orientée de telle sorte que, successivement, les faces $ACD$ puis $ABD$ nous apparaissent comme une droite. De cette manière, on met en évidence que les points $H$ et $E$ sont visibles par la face $ACD$, et non pas par la face $ABD$. Ce qui n'est pas le cas du point $F$, qui lui est visible simultanément par les deux faces.
 
-Cette particularité nous interdit de faire l'étape de la division pour \emph{diviser pour régner}. On comprend également que contrairement à la version 2D où l'on se contentait d'agir sur une arête à la fois pour la subdiviser en de nouvelles sous-arêtes, ici on devra parfois supprimer plusieurs faces (car visibles depuis un point extrême) pour reconstruire un certain nombre de faces supplémentaires (l'exemple donné ici est un cas particulier plutôt simple car le point extrême $D$ ne voit qu'une seule face : le triangle $ABC$).
+Cette particularité nous interdit de faire l'étape de la division de \emph{diviser pour régner}, car on ne peut pas faire de subdivision en des sous-ensembles disjoints (l'un des sous-ensembles pourrait tout à fait avoir un impact sur l'autre lors du traitement). On comprend également que, contrairement à la version 2D où l'on se contentait d'agir sur une arête à la fois pour la subdiviser en de nouvelles sous-arêtes, ici on devra parfois supprimer plusieurs faces — car toutes visibles depuis un unique point extrême — pour reconstruire un certain nombre de faces supplémentaires. \emph{L'exemple donné ici est un cas particulier plutôt simple, car le point extrême $D$ ne voit qu'une seule face : le triangle $ABC$}.
 
 \subsection{Adaptation de l'algorithme}
 
@@ -230,12 +221,13 @@ La boucle principale de l'algorithme suit ces étapes :
 	\item On prend le point le plus extrême (le plus éloigné) par rapport à ladite face depuis le sous-ensemble de points associé.
 	\item On supprime \textbf{toutes} les faces visibles de l'enveloppe convexe depuis ce point.
 	\item On reconstruit l'enveloppe convexe en formant des faces (triangles) entre ce point et le bord du trou laissé à l'étape précédente.
-	\item On recalcule le sous-ensemble de points associé à la face courante par rapport à la nouvelle enveloppe obtenue (étape qui est loin d'être triviale). On devrait obtenir un nouveau sous-ensemble de points par face nouvellement ajoutée.
+	\item On recalcule le sous-ensemble de points associé à la face courante par rapport à la nouvelle enveloppe obtenue. On devrait obtenir un nouveau sous-ensemble de points par face nouvellement ajoutée.
 	\item Ré-itérer jusqu'à ce qu'il n'y ait plus de sous-ensemble non-vide associé à l'une des faces de l'enveloppe convexe.
 \end{itemize}
+\textbf{Note :} Un pseudo-code donné à la section \ref{pseudo-code_implantation} vient préciser l'algorithme d'une manière plus formelle.
 
 \paragraph{}
-La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient 4 points), sélectionnés suivant la méthode suivante (méthode adaptée de \cite{smith}) :
+La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à trouver un solide minimal qui formera l'enveloppe convexe initiale. Celui-ci est formé de 4 faces (soient quatre points), sélectionnés d'après la méthode suivante (méthode adaptée de \cite{smith}) :
 \begin{itemize}
 	\item On cherche deux points les plus éloignés sur deux axes (parmi $x$, $y$ et $z$) parmi l'ensemble de points.
 	\item Avec l'arête formée des deux points précédents, on cherche un troisième point le plus éloigné de ce segment.
@@ -245,7 +237,7 @@ La première étape de l'algorithme consiste (à la manière de Quickhull 2D) à
 \end{itemize}
 
 \paragraph{}
-On se rend compte que cette fois-ci il va nous falloir une structure de données pour représenter les sous-ensembles de points associés aux faces. Celle-ci sera appelée $oset$ pour \emph{outside set} par la suite (et $osubset$ pour \emph{outside subset}).
+On se rend compte que cette fois-ci il va nous falloir une structure de données pour représenter les sous-ensembles de points associés aux faces. Par la suite celle-ci sera appelée $oset$ pour \emph{outside set} (et $osubset$ pour \emph{outside subset}).
 
 \subsection{Structures de données}
 \subsubsection{Données d'entrées}
@@ -257,7 +249,7 @@ La structure en liste de demi-arêtes orientées (doubly connected edge list, ab
 Ici on implante une version restreinte de cette dernière, puisqu'elle permet de créer maillages triangulaires uniquement — ce qui correspond à notre besoin.
 
 \paragraph{Demi-arête}
-Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Celles-ci sont les suivantes :
+Une $he$ (abrévation de halfedge, ou demi-arête) est une structure de données disposant d'informations sur elle-même et son voisinage topologique. Les champs et leur sémantique associée sont les suivants :
 \begin{itemize}
 	\item $index \in \mathbf{Z}$, un identifiant unique pour la demi-arête, avec :
 	      \[
@@ -287,7 +279,9 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 	\item $available\_he\_index \in \mathbf{N}$, le prochain indice non attribué à une $he$ de la liste.
 \end{itemize}
 
-\paragraph{Exemple simple en 2D}
+\paragraph*{Exemple simple en 2D}
+Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.
+
 \begin{figure}[H]
 	\[\begin{aligned}[c]
 			\entrymodifiers={+[o][F]}
@@ -361,14 +355,13 @@ Une $dcel$ permet la modélisation d'un maillage topologique triangulaire. Elle 
 			\end{tabular}
 		\end{aligned}
 	\]
-	\caption{Structure $dcel$ à gauche et la table des sommets à droite.\\\textbf{Note :} $avaiable\_he\_index$ est l'indice pour la prochaine demi-arête qui sera ajoutée à la $dcel$. On pourrait s'en passer et utiliser à la place l'indice de la dernière $he$ ajoutée à la $dcel$ pour calculer le prochain indice.}
+	\caption{Structure $dcel$ à gauche et la table des sommets à droite.}
 	\label{maillage_simple_struct_associee}
 \end{figure}
 
-Considérons le maillage de la Figure~\ref{maillage_simple}. Une structure $dcel$ associée valide serait alors telle que celle présentée Figure~\ref{maillage_simple_struct_associee}.
+\textbf{Note :} $avaiable\_he\_index$ est l'indice pour la prochaine demi-arête qui sera ajoutée à la $dcel$. On pourrait s'en passer et utiliser à la place l'indice de la dernière $he$ ajoutée à la $dcel$ pour calculer le prochain indice.\\
 
-\paragraph{Ajout et retrait d'une face dans une $dcel$}
-Il s'agit des deux seules opérations de modification d'une $dcel$.
+\textbf{Note :} Il n'y a que deux opérations principales de modification d'une $dcel$ : l'ajout d'une face, et le retrait d'une face. L'ajout d'une face correspond à l'ajout de trois demi-arêtes, et le retrait d'une face correspond à la suppression de trois demi-arêtes.
 
 \subsubsection{Stockage et manipulation de l'ensemble de points extérieurs associés aux faces}
 \paragraph*{Sous-ensemble de points extérieurs — $osubset$}
@@ -379,16 +372,29 @@ Un sous-ensemble de points extérieurs (outside subset) est une structure de don
 \end{itemize}
 
 \paragraph*{Ensemble de points extérieurs — $oset$}
-L'ensemble de points extérieurs (outside set) n'est rien d'autre qu'une liste d'$osubset$, chacune associée à une unique face (et son ensemble de points extérieurs associé).
+L'ensemble de points extérieurs (outside set) n'est rien d'autre qu'une liste de couples d'$osubset$ et d'indice de face associée.
 
-\subsection{Pseudo-code d'implantation et spécifications}\label{pseudo-code_implantation}
+\subsection{Propriétés et spécifications supplémentaires des structures de données}
+Avec toutes les informations dont on dispose sur les structures de données, on peut alors en déduire des propriétés et des spécifications plus détaillées.\\
 
 Soit $P \subset \mathbf{R^3} $, l'ensemble $n$ des points tridimensionnels donnés en entrée de Quickhull.\\
 Soit $P_{indices}$ = $\{0,1,\ldots,n - 1\}$, l'ensemble des $n$ indices associés aux $n$ points de $P$.\\
-Soit $O$ un $oset$, l'ensemble des couples $\langle f, O_{subset} \rangle$ de faces et de points extérieurs associés.
-Soit $E$ une $dcel$, l'ensemble des $m$ demie-arêtes de l'enveloppe.\\
-Alors à tout moment, les propriétés suivantes sur les structures de données sont censées être vérifiées :
+Soit $O$ un $oset$, l'ensemble des couples $\langle f, O_{subset} \rangle$ de faces et de points extérieurs associés.\\
+Soit $E$ une $dcel$, l'ensemble des $m$ demi-arêtes de l'enveloppe.\\
+
+Alors à tout moment, les propriétés suivantes sur les structures de données sont censées être vérifiées pour être considérées comme étant valides :
 \begin{itemize}
+	\item La taille de $E$ (son nombre de demi-arêtes) est un multiple de 3.
+	\item Pour toute demi-arête $he \in E$ :
+	      \[
+		      0 \leq he.index < m
+	      \]
+	      \[
+		      -1 \leq he.opposite < m
+	      \]
+	      \[
+		      he.vertex \in P_{indices}
+	      \]
 	\item Les sous-ensembles de points sont disjoints :
 	      \[
 		      \emptyset = \bigcap_{\langle f, O_{subset} \rangle \in O}^{} { O_{subset}}
@@ -401,19 +407,13 @@ Alors à tout moment, les propriétés suivantes sur les structures de données 
 	      \[
 		      0 \leq face_{indice} < \lfloor m / 3 \rfloor
 	      \]
-	\item Pour toute arête $he \in E$:
-	      \[
-		      he.index \in \{x \mid 0 \leq x < m\}
-	      \]
-	      \[
-		      he.opposite \in \{x \mid -1 \leq x < m\},
-	      \]
-	      \[
-		      he.vertex \in P_{indices}
-	      \]
+	      \textbf{Note :} Cette dernière propriété implique que la structure $oset$ doit être maintenue à jour après chaque modification de la structure $dcel$. C'est illustré dans la section \ref{pseudo-code_implantation}, algo. \ref{algo_Quickhull3DRec}, ligne \ref{maj_oset_instr}.
 \end{itemize}
 
-\subsubsection*{Fonctions principales}
+\pagebreak
+\subsection{Pseudo-code}\label{pseudo-code_implantation}
+
+\subsubsection{Fonctions principales}
 
 \begin{algorithm}[H]
 	\caption{Quickhull3D}
@@ -441,17 +441,26 @@ L'algorithme qui suit, bien que récursif, est équivalent à une boucle \texttt
 		\Else
 		\State $\langle f_{sel}, O_{sel} \rangle \leftarrow$ \Call{premierOsubset}{$O$} \Comment{$\langle f_{sel}, O_{sel} \rangle \in O$} \label{heuristique2}
 		\State $p_{sel} \leftarrow$ \Call{lePlusEloigne}{$P$, $f_{sel}$, $O_{sel}$} \Comment{$p_{sel} \in O_{sel}$} \label{heuristique1}
-		\State Supprimer $p_{sel}$ du sous-ensemble associé à la face $f_{sel}$ de $O$
+		\State Retirer $p_{sel}$ du sous-ensemble associé à la face $f_{sel}$ de $O$
 		\State $\langle E, F_{suppr} \rangle \leftarrow$ \Call{supprimerFacesVisibles}{$P$, $E$, $f_{sel}$, $p_{sel}$}
 		\State $\langle E, F_{creees} \rangle \leftarrow$ \Call{reconstruireFaces}{$E$, $p_{sel}$}
-		\State $O \leftarrow$ \Call{mettreAjourOset}{$P$, $E$, $O$, $F_{suppr}$, $F_{creees}$}
+		\State $O \leftarrow$ \Call{mettreAjourOset}{$P$, $E$, $O$, $F_{suppr}$, $F_{creees}$}\label{maj_oset_instr}
 		\State \Return \Call{Quickhull3DRec}{$P$, $E$, $O$}
 		\EndIf
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
 
-\subsubsection*{Supression des faces visibles}
+
+\paragraph{Invariant à noter ici} Soient $E_i$ et $E_{i + 1}$ des $dcel$, $O_i$ et $O_{i + 1}$ les $oset$, respectivement au début de la récursion $i$ et de la sous-récursion $i + 1$ de l'algorithme, on peut déduire l'invariant suivant :
+\[
+	\left(\bigcup_{\langle f, O_{subset} \rangle \in O_{i + 1}}^{} O_{subset} \right) \subset \left(\bigcup_{\langle f, O_{subset} \rangle \in O_i}^{} O_{subset} \right)
+\]
+En effet, à chaque récursion (ou  itération) on est certain de supprimer au moins un point dans l'$oset$ : le point extrême sélectionné. Cet invariant assure la terminaison de l'algorithme.\\
+
+\textbf{Note :} L'appel à la fonction \texttt{lePlusEloigne} a un coût en $O(n)$, $n$ étant la taille du sous-ensemble $O_{sel}$, ce qui est acceptable.
+
+\subsubsection{Supression des faces visibles}
 Cet algorithme supprime les faces de l'enveloppe $E$, visibles depuis le point $p_{sel}$. En apparence plutôt complexe, son principe reste assez simple. Il part de la face $f$, la supprime (ligne \ref{suppr_face}, algo. \ref{algo_supprimerFacesVisibles}), puis, récursivement, explore et supprime ses faces voisines. Les conditions d'arrêt sont que : la face explorée ne soit plus visible depuis $p_{sel}$ (ligne \ref{visible_cond}, algo. \ref{algo_supprimerFacesVisiblesRec}), ou que la face explorée ait déjà été supprimée (ligne \ref{bordure_cond}, algo. \ref{algo_supprimerFacesVisiblesRec}), auquel cas on est sur une arête de bordure.
 
 Une illustration donnée à la section \ref{demo_visuelle_3d_js}, figure \ref{demo_visuelle_3d_js_fig_a}, correspond à cet algorithme.
@@ -482,17 +491,17 @@ Une illustration donnée à la section \ref{demo_visuelle_3d_js}, figure \ref{de
 		\Require $P$ la liste des points 3D (reste inchangée lors de l'exécution)
 		\Require $E$ une $dcel$
 		\Require $F_{suppr}$ une liste d'indices des faces supprimées
-		\Require $he_{oppo}$ la demie-arête d'où l'on vient, opposée à la demie-arête où l'on va
+		\Require $he_{oppo}$ la demi-arête d'où l'on vient, opposée à la demi-arête où l'on va
 		\Require $p$ l'indice du point sélectionné (constant)
 		\Function{supprimerFacesVisiblesRec}{$P$, $\langle E, F_{suppr} \rangle$, $he_{oppo}$, $p$}
 		\If{ !\Call{estEnBordure}{$he_{oppo}$}} \label{bordure_cond}
-		\State $he \leftarrow$ \Call{demieAreteOpposee}{$he_{oppo}$}
+		\State $he \leftarrow$ \Call{demiAreteOpposee}{$he_{oppo}$}
 		\State $f \leftarrow$ \Call{indiceDeFace}{$he$}
 		\If{\Call{estVisible}{$P$, $E$, $p$, $f$}} \label{visible_cond}
 		\State $E \leftarrow$ \Call{supprimerFace}{$E$, $f$}
 		\State $F_{suppr} \leftarrow F_{suppr} \cup \{ f \}$
-		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demieAretePrec}{he}, p}$
-		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demieAreteSuiv}{he}, p}$
+		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demiAretePrec}{he}, p}$
+		\State $\langle E, F_{suppr} \rangle \leftarrow \Call{supprimerFacesVisiblesRec}{$P$, \langle E, F_{suppr} \rangle, \Call{demiAreteSuiv}{he}, p}$
 		\EndIf
 		\EndIf
 		\State \Return $\langle E, F_{suppr} \rangle$
@@ -500,8 +509,8 @@ Une illustration donnée à la section \ref{demo_visuelle_3d_js}, figure \ref{de
 	\end{algorithmic}
 \end{algorithm}
 
-\subsubsection*{Reconstruction des faces}
-L'algorithme précédent a conduit à la supression de faces dans l'enveloppe $E$. La reconstruction consiste à construire un triangle entre chaques demie-arêtes de la bordure de $E$ et le point extrême $p_{sel}$. La bordure est obtenue en un temps linéaire, par parcours et récupération des demie-arêtes de $E$ qui sont des demie-arêtes de bordure ($he.opposite == -1$).
+\subsubsection{Reconstruction des faces}
+L'algorithme précédent a conduit à la supression de faces dans l'enveloppe $E$. La reconstruction consiste à construire un triangle entre chaques demi-arêtes de la bordure de $E$ et le point extrême $p_{sel}$. La bordure est obtenue en un temps linéaire, par parcours et récupération des demi-arêtes de $E$ qui sont des demi-arêtes de bordure ($he.opposite == -1$).
 
 Une illustration donnée à la section \ref{demo_visuelle_3d_js}, figure \ref{demo_visuelle_3d_js_fig_a}, correspond à cet algorithme.
 \begin{algorithm}[H]
@@ -509,18 +518,18 @@ Une illustration donnée à la section \ref{demo_visuelle_3d_js}, figure \ref{de
 	\begin{algorithmic}[1]
 		\Require $E$ une $dcel$, $p$ l'indice du point sélectionné
 		\Function{reconstruireFaces}{$E$, $p_{sel}$}
-		\State $HE_{bord} \leftarrow$ \Call{demieAretesDuBord}{$E$} \Comment {$HE_{bord} \subseteq E$}
+		\State $HE_{bord} \leftarrow$ \Call{demiAretesDuBord}{$E$} \Comment {$HE_{bord} \subseteq E$}
 		\State $F_{creees} \leftarrow \emptyset$
-		\For{chaque demie-arête $he$ de $HE_{bord}$}
+		\For{chaque demi-arête $he$ de $HE_{bord}$}
 		\State $E \leftarrow$ \Call{ajouterFace}{$E$, $he$, $p$}
-		\State $F_{creees} \leftarrow F_{creees} \cup \{ \Call{indiceDeFace}{\Call{demieAreteOppos}{he}} \}$
+		\State $F_{creees} \leftarrow F_{creees} \cup \{ \Call{indiceDeFace}{\Call{demiAreteOppos}{he}} \}$
 		\EndFor
 		\State \Return $\langle E, F_{creees} \rangle$
 		\EndFunction
 	\end{algorithmic}
 \end{algorithm}
 
-\subsubsection*{Mise à jour de l'ensemble de points extérieurs}
+\subsubsection{Mise à jour de l'ensemble de points extérieurs}
 L'appel à cette méthode se fait dans un contexte où l'on a déjà supprimé puis reconstruit des faces. Notre $oset$ contient encore les faces qui ont été supprimées avec leurs points associés, et pas celles qui ont été créées.
 
 On supprime les sous-ensembles de points associés à des faces supprimées ligne \ref{suppr_faces_oset}, et on garde dans une liste à part les points devenus orphelins, ligne \ref{rapp_points_oset}. Dans la boucle, ligne \ref{faces_creees_oset}, on ajoute à l'$oset$, des sous-ensembles extérieurs vides, associés aux faces nouvellement créées. Lignes \ref{assoc_oset} à \ref{assoc_oset2}, pour chaque point orphelin, on recherche parmi les nouvelles faces une pour laquelle il est visible. Si tel est le cas, ce point est ajouté au sous-ensemble correspondant de l'$oset$, sinon cela signifie qu'il a été capturé dans le volume de la nouvelle enveloppe convexe (auquel cas il est oublié). La ligne \ref{suppr_vide_oset} supprime les sous-ensembles vides de l'$oset$ (ça n'est pas obligatoire en fonction de l'implantation).
@@ -557,6 +566,7 @@ On supprime les sous-ensembles de points associés à des faces supprimées lign
 	\end{algorithmic}
 \end{algorithm}
 
+\pagebreak
 \subsection{Évaluation des performances}
 Lors d'une itération dans l'algorithme de calcul d'enveloppe convexe 3D, deux instructions successives amènent à devoir choisir un élément parmi un ensemble — sachant que tous conduisent à la terminaison du programme et à la construction d'une enveloppe convexe valide. Dès lors l'utilisation d'heuristiques est envisageable, et cette partie porte sur la comparaison des performances en temps de calcul en fonction des méthodes employées.
 
@@ -618,6 +628,7 @@ De la même manière que pour la version 2D, j'ai développé un affichage de l'
 		\includegraphics[width=2.65cm]{qh3d/demo3d/init_1.png}
 	\end{center}
 	\caption{Exemple d'étapes, dans l'ordre chronologique, de la construction de l'enveloppe initiale (tétrahèdre) sur un ensemble de points 3D, face après face.}
+	\label{fig:env_initiale}
 \end{figure}
 
 \begin{figure}[H]
@@ -649,12 +660,12 @@ De la même manière que pour la version 2D, j'ai développé un affichage de l'
 
 \pagebreak
 \section{Implantation d'une étape de Quickhull 3D en Coq et extraction en Haskell}
-Maintenant que nous avons une implantation de Quickhull 3D qui fonctionne dans un style de programmation fonctionnelle, il serait intéressant d'explorer ce qu'il est possible de faire avec Coq. Pour rappel, l'idée à terme serait d'utiliser Coq pour prouver formellement que notre implantation de Quickhull 3D est correcte.
+Maintenant que nous avons une implantation de Quickhull 3D qui fonctionne dans un style de programmation fonctionnel, il serait intéressant d'explorer ce qu'il est possible de faire avec Coq. Pour rappel, l'idée à terme serait d'utiliser ce dernier pour prouver formellement que notre implantation de Quickhull 3D est correcte.
 
 \subsection{Variations par rapport à l'implantation JavaScript}
-Pour cette ré-implantation en Coq, je n'ai pas ré-écrit tout l'algorithme de Quickhull 3D, ni toutes ses structures de données. Le temps qu'il me restait m'aurait été bien insuffisant pour cela. L'idée c'est plutôt d'avoir une preuve de concept, et donc j'ai décidé de n'implémenter que la première partie de l'algorithme qui consiste à \textbf{calculer une enveloppe initiale}.
+Pour cette ré-implantation en Coq, je n'ai pas ré-écrit tout l'algorithme de Quickhull 3D, ni toutes ses structures de données. Le temps qu'il me restait m'aurait été bien insuffisant pour cela. L'idée c'est plutôt d'avoir une preuve de concept, et donc j'ai décidé de n'implémenter que la première partie de l'algorithme qui consiste à \textbf{calculer une enveloppe initiale} (des illustrations sont données dans les  figures \ref{fig:env_initiale} et \ref{fig:env_initiale_haskell}).
 
-Ainsi ce que j'ai implanté sont les $vec3$ (pour représenter les points en 3 dimensions), des opérations arithmétiques sur ces mêmes $vec3$, des opérations sur les listes, les $he$ et les $dcel$ avec leurs méthodes (à l'exception de l'opération de suppression de face).
+Ainsi ce que j'ai implanté sont les $vec3$ (pour représenter les points en trois dimensions), des opérations arithmétiques sur ces mêmes $vec3$, des opérations sur les listes, les $he$ et les $dcel$ avec leurs méthodes (à l'exception de l'opération de suppression de face).
 
 \paragraph{Des détails d'implantation ont été revus par rapport à la version en JavaScript}
 L'exemple le plus parlant est celui d'avoir utilisé la valeur $-1$ à chaque fois qu'il y a un indice qui peut être non-défini. En Coq (et en programmation fonctionnelle de manière générale), on peut faire mieux que cela en utilisant des monades. Les monades apportent une réelle sémantique, qui est explicite — une valeur peut-être non-définie —, contrairement au fait de choisir une valeur constante arbitraire, qui elle serait spécifique à l'implantation.
@@ -662,7 +673,7 @@ L'exemple le plus parlant est celui d'avoir utilisé la valeur $-1$ à chaque fo
 J'ai étendu l'utilisation de monades partout où cela me paraissait pertinent. Par exemple, pour les opérations d'accès par indice dans une liste. L'intérêt est aussi d'avoir des garde-fous à plusieurs endroits du programme.
 
 \subsection{Extraction du code Coq}
-Dans l'introduction nous avons vu que Coq n'est pas fait pour exporter ou importer des fichiers, dès lors qu'il ne s'agit pas de fichiers Coq compilés. Il est aussi très limité en termes de capacités d'exécution de code.
+Dans l'introduction, nous avons vu que Coq n'est pas fait pour exporter ou importer des fichiers, dès lors qu'il ne s'agit pas de fichiers Coq compilés. Il est aussi très limité en termes de capacités d'exécution de code.
 
 Cependant, l'un de ses modules permet de faire ce que l'on appelle de \textbf{l'extraction de code}. Cette opération consiste à transformer du code source écrit en Coq en un code source écrit dans un autre langage fonctionnel, au choix. Ce que l'on voudrait donc c'est de pouvoir compiler ce code extrait, pour pouvoir ensuite l'exécuter et se convaincre visuellement de son fonctionnement.
 
@@ -683,7 +694,7 @@ Ma première idée fut de choisir le JSON. En effet, je n'ai aucune connaissance
 		\end{tikzpicture}
 	\end{center}
 \end{figure}
-Seulement voilà, le JSON est un format de stockage de données uniquement, et donc l'agencement à l'intérieur d'un fichier est purement arbitraire. Hors l'extraction de Coq vers ce format n'est absolument pas documenté. Il n'y a même aucune assurance pour que le code extrait soit correct.
+Seulement voilà, le JSON est un format de stockage de données uniquement, et donc l'agencement à l'intérieur d'un fichier est purement arbitraire. Hors, l'extraction de Coq vers ce format n'est absolument pas documentée. Il n'y a même aucune assurance pour que le code extrait soit correct.
 
 Faire la rétro-ingénierie des fichiers extraits depuis Coq aurait été d'une part difficile, mais en plus excessivement long à réaliser, sans aucune garantie de succès. Je n'ai donc pas maintenu ce choix.
 
@@ -740,11 +751,11 @@ Je n'ai pas eu beaucoup de temps pour évaluer et comparer les performances avec
 \end{itemize}
 Cette différence n'est pas négligeable, surtout quand on sait que JavaScript n'est pas réputé pour être ce qu'il y a de plus performant.
 
-Dans un premier temps j'ai apporté une optimisation en ce qui concerne les accès aux tableaux, en modifiant des règles d'extraction vers Haskell. Le gain est net puisque cette fois-ci le temps de calcul est de 1300 millisecondes, mais c'est encore bien loin de ce que l'on pourrait attendre.
+Dans un premier temps j'ai apporté une optimisation en ce qui concerne les accès aux tableaux, en modifiant des règles d'extraction vers Haskell. Le gain est net, puisque cette fois-ci le temps de calcul est de 1300 millisecondes, mais c'est encore bien loin de ce que l'on serait en droit d'attendre.
 
 Une dernière méthode consiste à indiquer au compilateur de Haskell que l'on souhaite une compilation plus poussée. On arrive donc à un temps de calcul de 930 millisecondes.
 
-Je n'ai pas exploré plus que cela l'optimisation, mais il n'est pas impossible que l'arithmétique sur les entiers naturels, telle qu'obtenue après extraction, soit la partie fautive de l'algorithme.
+Je n'ai pas exploré plus que cela l'optimisation, et il n'est pas exclu que l'arithmétique sur les entiers naturels, telle qu'obtenue après extraction, soit la partie fautive de l'algorithme.
 
 \subsection{Visualisation de la sortie du programme - Viewer}
 
@@ -754,6 +765,7 @@ Je n'ai pas exploré plus que cela l'optimisation, mais il n'est pas impossible 
 		\includegraphics[width=5cm]{viewer/screen1.png}
 	\end{center}
 	\caption{L'enveloppe initiale calculée à l'aide du programme Haskell extrait depuis l'implantation en Coq. Ici on se sert du programme de visualisation écrit en C pour visualiser les points et le maillage triangulaire.}
+	\label{fig:env_initiale_haskell}
 \end{figure}
 
 \begin{figure}[H]
@@ -761,13 +773,13 @@ Je n'ai pas exploré plus que cela l'optimisation, mais il n'est pas impossible 
 		\includegraphics[width=5cm]{illus/illus1.png}
 		\includegraphics[width=5cm]{illus/illus2.png}
 	\end{center}
-	\caption{Le programme de visualisation fonctionne également avec les enveloppes générées par la version JavaScript de Quickhull 3D, moyennant la conversion de l'enveloppe convexe et des points dans un format spécifique.}
+	\caption{Le programme de visualisation fonctionne également avec les enveloppes générées par la version JavaScript de Quickhull 3D, moyennant la conversion de l'enveloppe convexe et des points dans un format compatible.}
 \end{figure}
 
 \pagebreak
 \section{Conclusion}
 \subsection{Pour résumer}
-Dans le cadre de ce travail recherche, pour me familiariser avec le sujet, j'ai d'abord implanté Quickhull en deux dimensions dans un style fonctionnel en JavaScript. J'y ai greffé une interface permettant de visualiser aussi bien l'enveloppe calculée que les étapes de sa construction.
+Dans le cadre de ce travail recherche, pour me familiariser avec le sujet, j'ai d'abord implanté Quickhull en deux dimensions dans un style fonctionnel en JavaScript. J'y ai greffé une interface permettant de visualiser, aussi bien l'enveloppe calculée, que les étapes de sa construction.
 
 Dans un second temps, j'ai travaillé sur la version tridimensionnelle de Quickhull. Outre les difficultés inhérentes au passage à la dimension supérieure, j'ai dû réfléchir à concevoir des structures de données complexes — pour représenter l'enveloppe calculée et les sous-ensembles de points —, utilisables dans un contexte de programmation fonctionnelle. Cette implantation est aussi accompagnée de son interface graphique, ici indispensable pour ne serait-ce que se convaincre du bon fonctionnement de l'algorithme. J'en ai profité, au passage, pour faire quelques évaluations de performances en temps de calcul.
 
@@ -776,9 +788,9 @@ La dernière partie de mon travail a consisté à développer une preuve de conc
 \subsection{Si c'était à refaire}
 Mon sujet de TER est un sujet plutôt libre. Et parmi tous les choix et les approches que j'ai pu aborder pour y répondre, avec le recul il ne me semble pas qu'ils aient tous été les plus pertinents.
 
-Travailler sur l'algorithme Quickhull en particulier pouvait être particulièrement intéressant dans la mesure où, en théorie, le paradigme \emph{diviser pour régner} était exploitable. De cette manière, on peut alors autoriser la parallélisation, et donc une obtenir une meilleure utilisation des ressources informatiques. Mais cela n'est pas le cas ici, nous l'avons vu, Quickhull en trois dimensions a un fonctionnement surtout itératif. Pourtant, il existe bel et bien des algorithmes de calcul de l'enveloppe convexe à trois dimensions en \emph{diviser pour régner} \cite{https://doi.org/10.48550/arxiv.1205.1171}. Un autre algorithme, possiblement plus intéressant, aurait alors pu faire l'objet de ce travail d'implantation.
+Travailler sur l'algorithme Quickhull en particulier, pouvait être particulièrement intéressant dans la mesure où, en théorie, le paradigme \emph{diviser pour régner} était exploitable. De cette manière, on peut alors autoriser la parallélisation, et donc une obtenir une meilleure utilisation des ressources informatiques. Mais cela n'est pas le cas ici, nous l'avons vu, Quickhull en trois dimensions a un fonctionnement surtout itératif. Pourtant, il existe bel et bien des algorithmes de calcul de l'enveloppe convexe à trois dimensions en \emph{diviser pour régner} \cite{https://doi.org/10.48550/arxiv.1205.1171}. Un autre algorithme, possiblement plus intéressant, aurait alors pu faire l'objet de ce travail d'implantation.
 
-Un autre axe d'amélioration possible porte sur le fait d'utiliser JavaScript. Je l'ai choisi par facilité et méconnaissance d'un autre langage. Mais je pense que son principal défaut réside dans la lisibilité du code que j'ai écrit. JavaScript est un langage faiblement typé, cela veut dire que le type des variables n'est pas explicite. Pire encore, il y a beaucoup de conversions implicites et les types sont dynamiques. Hors pour le travail de ré-écriture en Coq, compte-tenu de ces aspects, le fait de repartir de la version JavaScript est une grande source de confusion. S'il fallait le refaire je choisirais sûrement un langage tel que le C++, ou alors dans l'idéal l'OCaml, langage dans lequel Coq a lui-même été écrit.
+Un autre axe d'amélioration possible porte sur le fait d'utiliser JavaScript. Je l'ai choisi par facilité et méconnaissance d'un autre langage. Mais rétrospectivement parlant, je pense que son principal défaut réside dans la lisibilité du code que j'ai écrit. JavaScript est un langage faiblement typé, cela veut dire que le type des variables n'est pas explicite. Pire encore, il y a beaucoup de conversions implicites et les types sont dynamiques. Hors pour le travail de ré-écriture en Coq, compte-tenu de ces aspects, le fait de repartir de la version JavaScript est une grande source de confusion. S'il fallait le refaire je choisirais sûrement un langage tel que le C++, ou alors dans l'idéal l'OCaml, langage dans lequel Coq a lui-même été écrit.
 
 Enfin, plus un regret qu'autre chose, je n'ai pas été en mesure de proposer un programme pour l'affichage qui soit aisément maintenable ou évolutif. Le code n'est pas le plus propre qu'il soit, pas documenté, et il a été développé sur mesure en fonction de ce qui m'intéressait d'afficher. Si je devais reprendre cette partie du travail, je consacrerais bien plus de temps pour le rendre, au moins, compréhensible et lisible. Et dans l'idéal, mieux structuré pour permettre des évolutions.
 
@@ -786,6 +798,8 @@ Enfin, plus un regret qu'autre chose, je n'ai pas été en mesure de proposer un
 En considérant que l'on maintienne le choix de Quickhull en trois dimensions comme algorithme de calcul d'enveloppe convexe, déjà il faudrait continuer l'implantation en Coq, et en améliorer la documentation au passage. Il reste encore beaucoup de travail de ce côté là.
 
 En parallèle, plusieurs pistes sont envisageables. Soit on garde le modèle actuel d'extraction vers du Haskell. Auquel cas, il serait éventuellement intéressant de chercher à corriger les écarts en performances que l'on a pu voir section \ref{sec:optimisations}. Le Viewer pourrait aussi être grandement amélioré pour afficher les états intermédiaires de construction de l'enveloppe, tel que ce qui est fait dans la version JavaScript (section \ref{demo_visuelle_3d_js}). L'autre possibilité, c'est d'explorer plus en profondeur ce qui est possible de faire avec Js\_of\_ocaml. Dans ce cas, on pourrait alors réutiliser l'affichage, section \ref{demo_visuelle_3d_js}, pour afficher les états intermédiaires de construction de l'enveloppe sans trop de travail supplémentaire.
+
+Un travail de construction de preuve avec Coq est ensuite envisageable, à condition de bien identifier et formaliser les invariants.
 
 \pagebreak
 \bibliographystyle{plain}
